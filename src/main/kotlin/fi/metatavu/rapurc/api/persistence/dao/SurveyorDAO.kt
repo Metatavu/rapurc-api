@@ -27,6 +27,7 @@ class SurveyorDAO: AbstractDAO<Surveyor>() {
      * @param phone surveyors phone number
      * @param email surveyors email
      * @param reportDate surveyors report date
+     * @param propertyName property name
      * @param creatorId creator id
      * @param lastModifierId last modifier id
      * @return created surveyor
@@ -41,6 +42,7 @@ class SurveyorDAO: AbstractDAO<Surveyor>() {
         phone: String,
         email: String?,
         reportDate: LocalDate?,
+        visits: String?,
         creatorId: UUID,
         lastModifierId: UUID
     ) : Surveyor {
@@ -54,6 +56,7 @@ class SurveyorDAO: AbstractDAO<Surveyor>() {
         surveyor.phone = phone
         surveyor.email = email
         surveyor.reportDate = reportDate
+        surveyor.visits = visits
         surveyor.creatorId = creatorId
         surveyor.lastModifierId = lastModifierId
         return persist(surveyor)

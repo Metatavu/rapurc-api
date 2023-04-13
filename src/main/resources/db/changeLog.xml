@@ -663,4 +663,16 @@
 
     <dropColumn tableName="wastematerial" columnName="name"/>
   </changeSet>
+
+  <changeSet id="xamk_dateUnknown_visits_propertyName" author="miika hamalainen">
+    <addColumn tableName="survey">
+      <column name="dateUnknown" type="boolean"/>
+    </addColumn>
+    <addColumn tableName="surveyor">
+      <column name="visits" type="varchar(192)"/>
+    </addColumn>
+    <addColumn tableName="building">
+      <column name="propertyname" type="varchar(192)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

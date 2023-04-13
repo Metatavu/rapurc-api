@@ -54,6 +54,7 @@ class SurveyorController {
             phone = surveyor.phone,
             email = surveyor.email,
             reportDate = surveyor.reportDate,
+            visits = surveyor.visits,
             creatorId = creatorId,
             lastModifierId = creatorId
         )
@@ -90,6 +91,7 @@ class SurveyorController {
         surveyorToUpdate.email = surveyor.email
         surveyorToUpdate.reportDate = surveyor.reportDate
         surveyorToUpdate.lastModifierId = lastModifierId
+        surveyorToUpdate.visits = surveyor.visits
 
         return surveyorDAO.updateSurveyor(surveyorToUpdate)
     }

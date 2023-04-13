@@ -27,6 +27,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param status status
      * @param keycloakGroupId keycloak group id
      * @param type type
+     * @param dateUnknown demolition date unknown
      * @param startDate start date
      * @param endDate end date
      * @param creatorId creator's id
@@ -38,6 +39,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         status: SurveyStatus,
         keycloakGroupId: UUID,
         type: SurveyType,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         creatorId: UUID,
@@ -48,6 +50,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         survey.status = status
         survey.keycloakGroupId = keycloakGroupId
         survey.type = type
+        survey.dateUnknown = dateUnknown
         survey.startDate = startDate
         survey.endDate = endDate
         survey.creatorId = creatorId
@@ -63,6 +66,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param address filter by address
      * @param status filter by status
      * @param type filter by type
+     * @param dateUnknown filter by date unknown
      * @param startDate filter after start date
      * @param endDate filter before end date
      * @param keycloakGroupId filter by group id
@@ -74,6 +78,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         keycloakGroupId: UUID?
@@ -95,6 +100,10 @@ class SurveyDAO: AbstractDAO<Survey>() {
 
         if (type != null) {
             restrictions.add(criteriaBuilder.equal(root.get(Survey_.type), type))
+        }
+                
+        if (dateUnknown != null) {
+            restrictions.add(criteriaBuilder.equal(root.get(Survey_.dateUnknown), dateUnknown))
         }
 
         if (startDate != null) {
@@ -146,6 +155,20 @@ class SurveyDAO: AbstractDAO<Survey>() {
         return persist(survey)
     }
 
+     /**
+     * Updates date unknown
+     *
+     * @param survey survey to update
+     * @param dateUnknown new value
+     * @param lastModifierId last modifier's id
+     * @return updated survey
+     */
+    fun updateDateUnknown(survey: Survey, dateUnknown: Boolean?, lastModifierId: UUID): Survey {
+        survey.dateUnknown = dateUnknown
+        survey.lastModifierId = lastModifierId
+        return persist(survey)
+    }
+    
     /**
      * Updates status
      *

@@ -35,6 +35,7 @@ class BuildingTranslator: AbstractTranslator<Building, fi.metatavu.rapurc.api.mo
         result.supportingStructure = entity.supportStructure
         result.facadeMaterial = entity.facadeMaterial
         result.roofType = entity.roofType
+        result.propertyName = entity.propertyName
         result.metadata = metadataTranslator.translate(entity)
 
         result.otherStructures = otherStructureDAO.listByBuilding(building = entity)?.map { jpaStructure ->
