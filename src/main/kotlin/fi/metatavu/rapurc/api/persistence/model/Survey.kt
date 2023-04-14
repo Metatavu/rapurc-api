@@ -26,7 +26,10 @@ class Survey: Metadata() {
 
     @Enumerated(EnumType.STRING)
     var type: SurveyType? = null
-
+    
+    @Column
+    var dateUnknown: Boolean? = null
+    
     @Column
     var startDate: LocalDate? = null
 

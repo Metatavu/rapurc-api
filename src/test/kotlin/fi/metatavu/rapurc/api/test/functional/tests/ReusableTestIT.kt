@@ -72,7 +72,7 @@ class ReusableTestIT {
             testBuilder.userB.reusables.create(survey2.id!!, reusable.copy(reusableMaterialId = material.id))
             testBuilder.userB.reusables.create(survey2.id, reusable.copy(reusableMaterialId = material.id))
 
-            val listSurveys = testBuilder.admin.surveys.listSurveys(null, null, null, null, null, null, null)
+            val listSurveys = testBuilder.admin.surveys.listSurveys(null, null, null, null, null, null, null, null)
             assertEquals(survey2.id, listSurveys[0].id)
             testBuilder.userA.reusables.assertListFailStatus(403, survey2.id)
             testBuilder.userA.reusables.assertCount(1, survey1.id)

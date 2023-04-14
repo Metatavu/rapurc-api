@@ -135,6 +135,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?
     ): Response? {
@@ -151,6 +152,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             address = address,
             status = status,
             type = type,
+            dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
             keycloakGroupId = groupId
@@ -170,6 +172,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             status = status,
             keycloakGroupId = groupId,
             type = survey.type,
+            dateUnknown = survey.dateUnknown,
             startDate = survey.startDate,
             endDate = survey.endDate,
             creatorId = userId
@@ -204,6 +207,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val updatedSurvey = surveyController.update(
             survey = surveyToUpdate,
             status = survey.status,
+            dateUnknown = survey.dateUnknown,
             startDate = survey.startDate,
             endDate = survey.endDate,
             lastModifierId = userId

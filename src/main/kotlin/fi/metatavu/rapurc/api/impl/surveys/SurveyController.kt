@@ -56,6 +56,7 @@ class SurveyController {
      * @param address filter by address
      * @param status filter by status
      * @param type survey type
+     * @param dateUnknown demolition date unknown
      * @param startDate start date
      * @param endDate end date
      * @param keycloakGroupId filter by group id
@@ -67,6 +68,7 @@ class SurveyController {
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         keycloakGroupId: UUID?
@@ -77,6 +79,7 @@ class SurveyController {
             address = address,
             status = status,
             type = type,
+            dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
             keycloakGroupId = keycloakGroupId
@@ -90,6 +93,7 @@ class SurveyController {
      * @param keycloakGroupId keycloak group id
      * @param type survey type
      * @param startDate estimated demolition start
+     * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
      * @param creatorId creator's ID
      * @return created survey
@@ -98,6 +102,7 @@ class SurveyController {
         status: SurveyStatus,
         keycloakGroupId: UUID,
         type: SurveyType,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         creatorId: UUID
@@ -107,6 +112,7 @@ class SurveyController {
             status = status,
             keycloakGroupId = keycloakGroupId,
             type = type,
+            dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
             creatorId = creatorId,
@@ -129,6 +135,7 @@ class SurveyController {
      *
      * @param survey survey to update
      * @param status new status
+    * @param dateUnknown date unknown
      * @param startDate start date
      * @param endDate end date
      * @param lastModifierId last modifier's id
@@ -137,11 +144,13 @@ class SurveyController {
     fun update(
         survey: Survey,
         status: SurveyStatus,
+        dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         lastModifierId: UUID
     ): Survey {
         val result = surveyDAO.updateStatus(survey = survey, status = status, lastModifierId = lastModifierId)
+        surveyDAO.updateDateUnknown(survey = result, dateUnknown = dateUnknown, lastModifierId = lastModifierId)
         surveyDAO.updateStartDate(survey = result, startDate = startDate, lastModifierId = lastModifierId)
         surveyDAO.updateEndDate(survey = result, endDate = endDate, lastModifierId = lastModifierId)
         return result

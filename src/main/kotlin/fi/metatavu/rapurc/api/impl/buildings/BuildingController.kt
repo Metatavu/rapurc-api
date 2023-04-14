@@ -62,6 +62,7 @@ class BuildingController {
             facadeMaterial = building.facadeMaterial,
             roofType = building.roofType,
             streetAddress = building.address?.streetAddress,
+            propertyName = building.propertyName,
             city = building.address?.city,
             postCode = building.address?.postCode,
             creatorId = creatorId,
@@ -120,6 +121,7 @@ class BuildingController {
         buildingDAO.updateSupportStructure(result, building.supportingStructure, userId)
         buildingDAO.updateFacadeMateria(result, building.facadeMaterial, userId)
         buildingDAO.updateRoofType(result, building.roofType, userId)
+        buildingDAO.updatePropertyName(result, building.propertyName, userId)
         buildingDAO.updateStreetAddress(result, building.address?.streetAddress, userId)
         buildingDAO.updateCity(result, building.address?.city, userId)
         buildingDAO.updatePostCode(result, building.address?.postCode, userId)

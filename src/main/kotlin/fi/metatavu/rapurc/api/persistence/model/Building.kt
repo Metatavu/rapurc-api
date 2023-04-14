@@ -51,6 +51,9 @@ class Building: Metadata() {
     @Column
     var roofType: String? = null
 
+    @Column
+    var propertyName: String? = null
+    
     @Column (nullable = false)
     var streetAddress: String? = null
 

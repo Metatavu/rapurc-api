@@ -25,6 +25,7 @@ class SurveyorTranslator: AbstractTranslator<Surveyor, fi.metatavu.rapurc.api.mo
         result.phone = entity.phone
         result.email = entity.email
         result.reportDate = entity.reportDate
+        result.visits = entity.visits
         result.metadata = metadataTranslator.translate(entity)
         return result
     }

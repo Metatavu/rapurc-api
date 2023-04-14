@@ -72,6 +72,7 @@ class SurveyTestBuilderResource(
      * @param address filter by address
      * @param status filter by status
      * @param type filter by type
+     * @param dateUnknown filter by date unknown
      * @param startDate filter by start date
      * @param endDate filter by end date
      * @return found surveys
@@ -82,6 +83,7 @@ class SurveyTestBuilderResource(
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: String?,
         endDate: String?
     ): Array<Survey> {
@@ -91,6 +93,7 @@ class SurveyTestBuilderResource(
             address = address,
             status = status,
             type = type,
+            dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate
         )
@@ -140,6 +143,7 @@ class SurveyTestBuilderResource(
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: String?,
         endDate: String?
     ) {
@@ -151,6 +155,7 @@ class SurveyTestBuilderResource(
                 address = address,
                 status = status,
                 type = type,
+                dateUnknown = dateUnknown,
                 startDate = startDate,
                 endDate = endDate
             ).size
@@ -236,6 +241,7 @@ class SurveyTestBuilderResource(
         address: String?,
         status: SurveyStatus?,
         type: SurveyType?,
+        dateUnknown: Boolean?,
         startDate: String?,
         endDate: String?
     ) {
@@ -246,6 +252,7 @@ class SurveyTestBuilderResource(
                 address = address,
                 status = status,
                 type = type,
+                dateUnknown = dateUnknown,
                 startDate = startDate,
                 endDate = endDate
             )
