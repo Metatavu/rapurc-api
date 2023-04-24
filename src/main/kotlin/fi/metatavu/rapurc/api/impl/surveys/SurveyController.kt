@@ -12,6 +12,7 @@ import fi.metatavu.rapurc.api.model.SurveyType
 import fi.metatavu.rapurc.api.persistence.dao.SurveyDAO
 import fi.metatavu.rapurc.api.persistence.model.Survey
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
@@ -149,6 +150,16 @@ class SurveyController {
         endDate: LocalDate?,
         lastModifierId: UUID
     ): Survey {
+        // If survey gets the status updated as done, it should have the new markedAsUpdated value set
+        if (status == SurveyStatus.DONE && survey.status != SurveyStatus.DONE) {
+            surveyDAO.updateMarkedAsDone(survey = survey, markedAsDone = OffsetDateTime.now(), lastModifierId = lastModifierId)
+        }
+
+        // if survey is losing its done status, the markedAsDone value should be reset
+        if (status != SurveyStatus.DONE && survey.status == SurveyStatus.DONE) {
+            surveyDAO.updateMarkedAsDone(survey = survey, markedAsDone = null, lastModifierId = lastModifierId)
+        }
+
         val result = surveyDAO.updateStatus(survey = survey, status = status, lastModifierId = lastModifierId)
         surveyDAO.updateDateUnknown(survey = result, dateUnknown = dateUnknown, lastModifierId = lastModifierId)
         surveyDAO.updateStartDate(survey = result, startDate = startDate, lastModifierId = lastModifierId)

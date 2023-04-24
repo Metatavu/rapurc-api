@@ -675,4 +675,10 @@
       <column name="propertyname" type="varchar(192)"/>
     </addColumn>
   </changeSet>
+
+  <changeSet id="done_survey_date" author="katja danilova">
+    <addColumn tableName="survey">
+      <column name="markedasdone" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
