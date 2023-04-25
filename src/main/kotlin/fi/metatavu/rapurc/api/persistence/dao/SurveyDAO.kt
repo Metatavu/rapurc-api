@@ -30,6 +30,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param dateUnknown demolition date unknown
      * @param startDate start date
      * @param endDate end date
+     * @param additionalInformation additional information
      * @param creatorId creator's id
      * @param lastModifierId last modifier's id
      * @return created survey
@@ -42,6 +43,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
         creatorId: UUID,
         lastModifierId: UUID
     ): Survey {
@@ -53,6 +55,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         survey.dateUnknown = dateUnknown
         survey.startDate = startDate
         survey.endDate = endDate
+        survey.additionalInformation = additionalInformation
         survey.creatorId = creatorId
         survey.lastModifierId = lastModifierId
         return persist(survey)
@@ -191,6 +194,20 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @return updated survey
      */
     fun update(survey: Survey, lastModifierId: UUID): Survey {
+        survey.lastModifierId = lastModifierId
+        return persist(survey)
+    }
+
+    /**
+     * Updates additional information
+     *
+     * @param survey survey to update
+     * @param additionalInformation new additional information
+     * @param lastModifierId last modifier's id
+     * @return updated survey
+     */
+    fun updateAdditionalInformation(survey: Survey, additionalInformation: String?, lastModifierId: UUID): Survey {
+        survey.additionalInformation = additionalInformation
         survey.lastModifierId = lastModifierId
         return persist(survey)
     }

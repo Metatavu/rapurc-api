@@ -675,4 +675,10 @@
       <column name="propertyname" type="varchar(192)"/>
     </addColumn>
   </changeSet>
+
+  <changeSet id="additional_survey_information" author="katja danilova">
+    <addColumn tableName="survey">
+      <column name="additionalinformation" type="longtext"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

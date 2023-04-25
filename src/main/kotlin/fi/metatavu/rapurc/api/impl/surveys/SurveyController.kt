@@ -95,6 +95,7 @@ class SurveyController {
      * @param startDate estimated demolition start
      * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
+     * @param additionalInformation additional information
      * @param creatorId creator's ID
      * @return created survey
      */
@@ -105,6 +106,7 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
         creatorId: UUID
         ): Survey {
         return surveyDAO.create(
@@ -115,6 +117,7 @@ class SurveyController {
             dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
+            additionalInformation = additionalInformation,
             creatorId = creatorId,
             lastModifierId = creatorId
         )
@@ -147,12 +150,14 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
         lastModifierId: UUID
     ): Survey {
         val result = surveyDAO.updateStatus(survey = survey, status = status, lastModifierId = lastModifierId)
         surveyDAO.updateDateUnknown(survey = result, dateUnknown = dateUnknown, lastModifierId = lastModifierId)
         surveyDAO.updateStartDate(survey = result, startDate = startDate, lastModifierId = lastModifierId)
         surveyDAO.updateEndDate(survey = result, endDate = endDate, lastModifierId = lastModifierId)
+        surveyDAO.updateAdditionalInformation(survey = result, additionalInformation = additionalInformation, lastModifierId = lastModifierId)
         return result
     }
 

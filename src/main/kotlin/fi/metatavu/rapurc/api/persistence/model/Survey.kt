@@ -36,4 +36,7 @@ class Survey: Metadata() {
     @Column
     var endDate: LocalDate? = null
 
+    @Column
+    var additionalInformation: String? = null
+
 }

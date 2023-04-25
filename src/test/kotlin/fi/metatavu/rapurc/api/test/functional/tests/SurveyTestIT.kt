@@ -212,12 +212,13 @@ class SurveyTestIT {
     fun update() {
         TestBuilder().use {
             val survey = it.userA.surveys.create()
-            val updateData = survey.copy(status = SurveyStatus.dONE)
+            val updateData = survey.copy(status = SurveyStatus.dONE, additionalInformation = "test")
             val updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
 
             assertEquals(survey.id, updatedSurvey.id)
             assertNotEquals(survey.status, updatedSurvey.status)
             assertEquals(SurveyStatus.dONE, updatedSurvey.status)
+            assertEquals(updateData.additionalInformation, updatedSurvey.additionalInformation)
 
             it.userB.surveys.assertUpdateFailStatus(expectedStatus = 403, updateData)
             it.admin.surveys.assertUpdateFailStatus(expectedStatus = 404, survey.copy(id = UUID.randomUUID()))
