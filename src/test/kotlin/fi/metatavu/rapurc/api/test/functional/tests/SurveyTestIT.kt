@@ -12,6 +12,7 @@ import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -213,11 +214,22 @@ class SurveyTestIT {
         TestBuilder().use {
             val survey = it.userA.surveys.create()
             val updateData = survey.copy(status = SurveyStatus.dONE)
-            val updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
 
+            var updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
             assertEquals(survey.id, updatedSurvey.id)
             assertNotEquals(survey.status, updatedSurvey.status)
             assertEquals(SurveyStatus.dONE, updatedSurvey.status)
+            assertNotNull(updatedSurvey.markedAsDone)
+            val markedAsDone1 = OffsetDateTime.parse(updatedSurvey.markedAsDone)
+
+            updatedSurvey = it.userA.surveys.updateSurvey(body = survey.copy(status = SurveyStatus.dRAFT))
+            assertNull(updatedSurvey.markedAsDone)
+
+            updatedSurvey = it.userA.surveys.updateSurvey(body = survey.copy(status = SurveyStatus.dONE))
+            assertNotNull(updatedSurvey.markedAsDone)
+            val markedAsDone2 = OffsetDateTime.parse(updatedSurvey.markedAsDone)
+
+            assertTrue(markedAsDone2.isAfter(markedAsDone1))
 
             it.userB.surveys.assertUpdateFailStatus(expectedStatus = 403, updateData)
             it.admin.surveys.assertUpdateFailStatus(expectedStatus = 404, survey.copy(id = UUID.randomUUID()))
