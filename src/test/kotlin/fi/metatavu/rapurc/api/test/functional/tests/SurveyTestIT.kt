@@ -213,12 +213,13 @@ class SurveyTestIT {
     fun update() {
         TestBuilder().use {
             val survey = it.userA.surveys.create()
-            val updateData = survey.copy(status = SurveyStatus.dONE)
+            val updateData = survey.copy(status = SurveyStatus.dONE, additionalInformation = "test")
 
             var updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
             assertEquals(survey.id, updatedSurvey.id)
             assertNotEquals(survey.status, updatedSurvey.status)
             assertEquals(SurveyStatus.dONE, updatedSurvey.status)
+            assertEquals(updateData.additionalInformation, updatedSurvey.additionalInformation)
             assertNotNull(updatedSurvey.markedAsDone)
             val markedAsDone1 = OffsetDateTime.parse(updatedSurvey.markedAsDone)
 

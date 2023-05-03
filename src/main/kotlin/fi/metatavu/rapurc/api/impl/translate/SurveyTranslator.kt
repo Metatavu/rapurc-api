@@ -23,6 +23,7 @@ class SurveyTranslator: AbstractTranslator<Survey, fi.metatavu.rapurc.api.model.
         result.startDate = entity.startDate
         result.endDate = entity.endDate
         result.markedAsDone = entity.markedAsDone
+        result.additionalInformation = entity.additionalInformation
         result.metadata = metadataTranslator.translate(entity)
         return result
     }

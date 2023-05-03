@@ -175,6 +175,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             dateUnknown = survey.dateUnknown,
             startDate = survey.startDate,
             endDate = survey.endDate,
+            additionalInformation = survey.additionalInformation,
             creatorId = userId
         )
         return createOk(surveyTranslator.translate(createdSurvey))
@@ -210,6 +211,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             dateUnknown = survey.dateUnknown,
             startDate = survey.startDate,
             endDate = survey.endDate,
+            additionalInformation = survey.additionalInformation,
             lastModifierId = userId
         )
 

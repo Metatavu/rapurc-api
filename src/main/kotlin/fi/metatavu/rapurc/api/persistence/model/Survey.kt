@@ -40,4 +40,7 @@ class Survey: Metadata() {
     @Column
     var markedAsDone: OffsetDateTime? = null
 
+    @Column
+    var additionalInformation: String? = null
+
 }
