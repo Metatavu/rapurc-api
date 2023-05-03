@@ -5,6 +5,7 @@ import fi.metatavu.rapurc.api.model.SurveyType
 import fi.metatavu.rapurc.api.persistence.model.Survey
 import fi.metatavu.rapurc.api.persistence.model.Survey_
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.persistence.TypedQuery
@@ -210,6 +211,20 @@ class SurveyDAO: AbstractDAO<Survey>() {
         survey.additionalInformation = additionalInformation
         survey.lastModifierId = lastModifierId
         return persist(survey)
+    }
+
+    /**
+     * Updates marked as done
+     *
+     * @param survey survey to update
+     * @param markedAsDone new marked as done
+     * @param lastModifierId last modifier's id
+     */
+    fun updateMarkedAsDone(survey: Survey, markedAsDone: OffsetDateTime?, lastModifierId: UUID) {
+        survey.markedAsDone = markedAsDone
+        survey.lastModifierId = lastModifierId
+        persist(survey)
+
     }
 
 }

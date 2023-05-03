@@ -676,6 +676,12 @@
     </addColumn>
   </changeSet>
 
+  <changeSet id="done_survey_date" author="katja danilova">
+    <addColumn tableName="survey">
+      <column name="markedasdone" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
+
   <changeSet id="additional_survey_information" author="katja danilova">
     <addColumn tableName="survey">
       <column name="additionalinformation" type="longtext"/>

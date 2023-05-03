@@ -3,6 +3,7 @@ package fi.metatavu.rapurc.api.persistence.model
 import fi.metatavu.rapurc.api.model.SurveyStatus
 import fi.metatavu.rapurc.api.model.SurveyType
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 import javax.persistence.*
 
@@ -35,6 +36,9 @@ class Survey: Metadata() {
 
     @Column
     var endDate: LocalDate? = null
+
+    @Column
+    var markedAsDone: OffsetDateTime? = null
 
     @Column
     var additionalInformation: String? = null
