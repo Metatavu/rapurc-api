@@ -43,4 +43,7 @@ class Survey: Metadata() {
     @Column
     var additionalInformation: String? = null
 
+    @Column
+    var creatorName: String? = null
+
 }

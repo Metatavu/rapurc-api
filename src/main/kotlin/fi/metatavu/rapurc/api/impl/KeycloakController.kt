@@ -54,6 +54,21 @@ class KeycloakController {
     }
 
     /**
+     * Returns display name for user
+     *
+     * @param userId user id
+     * @return username if found
+     */
+    fun getName(userId: UUID): String? {
+        val user = realm().users().get(userId.toString())?.toRepresentation() ?: return null
+        if (user.firstName != null && user.lastName != null) {
+            return user.firstName+" "+user.lastName
+        }
+
+        return user.username
+    }
+
+    /**
      * Constructs a Keycloak client
      *
      * @return Keycloak client
