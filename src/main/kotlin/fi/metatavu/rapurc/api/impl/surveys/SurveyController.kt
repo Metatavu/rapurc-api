@@ -96,7 +96,7 @@ class SurveyController {
      * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
      * @param additionalInformation additional information
-     * @param creatorName creator's name
+     * @param creatorDisplayName creator's name
      * @param creatorId creator's ID
      * @return created survey
      */
@@ -108,7 +108,7 @@ class SurveyController {
         startDate: LocalDate?,
         endDate: LocalDate?,
         additionalInformation: String?,
-        creatorName: String,
+        creatorDisplayName: String,
         creatorId: UUID
     ): Survey {
         return surveyDAO.create(
@@ -120,7 +120,7 @@ class SurveyController {
             startDate = startDate,
             endDate = endDate,
             additionalInformation = additionalInformation,
-            creatorName = creatorName,
+            creatorDisplayName = creatorDisplayName,
             creatorId = creatorId,
             lastModifierId = creatorId
         )

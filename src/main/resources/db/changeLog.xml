@@ -690,7 +690,7 @@
 
   <changeSet id="survey_creator_username" author="katja danilova">
     <addColumn tableName="survey">
-      <column name="creatorname" type="varchar(192)"/>
+      <column name="creatorsisplayname" type="varchar(192)"/>
     </addColumn>
   </changeSet>
 </databaseChangeLog>

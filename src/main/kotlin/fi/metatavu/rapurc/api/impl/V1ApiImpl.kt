@@ -168,7 +168,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val status = survey.status
 
         val groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
-        val surveyCreatorName = keycloakController.getName(userId) ?: return createForbidden("User name not found")
+        val surveyCreatorDisplayName = keycloakController.getDisplayName(userId) ?: return createForbidden("User name not found")
         val createdSurvey = surveyController.create(
             status = status,
             keycloakGroupId = groupId,
@@ -177,7 +177,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             startDate = survey.startDate,
             endDate = survey.endDate,
             additionalInformation = survey.additionalInformation,
-            creatorName = surveyCreatorName,
+            creatorDisplayName = surveyCreatorDisplayName,
             creatorId = userId
         )
         return createOk(surveyTranslator.translate(createdSurvey))
