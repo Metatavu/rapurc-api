@@ -687,4 +687,10 @@
       <column name="additionalinformation" type="longtext"/>
     </addColumn>
   </changeSet>
+
+  <changeSet id="survey_creator_username" author="katja danilova">
+    <addColumn tableName="survey">
+      <column name="creatordisplayname" type="varchar(192)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

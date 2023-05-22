@@ -446,6 +446,8 @@
     "id" : "4d5c5296-587a-4387-91c5-b9f19d7d10d6",
     "createdTimestamp" : 1635259115362,
     "username" : "user_a",
+    "firstName": "first name",
+    "lastName": "last name",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : true,

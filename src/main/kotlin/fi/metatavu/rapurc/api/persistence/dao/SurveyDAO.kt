@@ -32,6 +32,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param startDate start date
      * @param endDate end date
      * @param additionalInformation additional information
+     * @param creatorDisplayName creator's display name
      * @param creatorId creator's id
      * @param lastModifierId last modifier's id
      * @return created survey
@@ -45,6 +46,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         startDate: LocalDate?,
         endDate: LocalDate?,
         additionalInformation: String?,
+        creatorDisplayName: String,
         creatorId: UUID,
         lastModifierId: UUID
     ): Survey {
@@ -57,6 +59,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         survey.startDate = startDate
         survey.endDate = endDate
         survey.additionalInformation = additionalInformation
+        survey.creatorDisplayName = creatorDisplayName
         survey.creatorId = creatorId
         survey.lastModifierId = lastModifierId
         return persist(survey)
