@@ -36,7 +36,7 @@ class SurveyTestIT {
         TestBuilder().use {
             val createdSurvey = it.userA.surveys.create()
             assertNotNull(createdSurvey)
-            assertEquals("first name last name", createdSurvey.creatorName)
+            assertEquals("first name last name", createdSurvey.creatorDisplayName)
 
             it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT)
         }
