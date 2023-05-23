@@ -12,6 +12,7 @@ import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -35,6 +36,7 @@ class SurveyTestIT {
         TestBuilder().use {
             val createdSurvey = it.userA.surveys.create()
             assertNotNull(createdSurvey)
+            assertEquals("first name last name", createdSurvey.creatorDisplayName)
 
             it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT)
         }
@@ -212,12 +214,24 @@ class SurveyTestIT {
     fun update() {
         TestBuilder().use {
             val survey = it.userA.surveys.create()
-            val updateData = survey.copy(status = SurveyStatus.dONE)
-            val updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
+            val updateData = survey.copy(status = SurveyStatus.dONE, additionalInformation = "test")
 
+            var updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
             assertEquals(survey.id, updatedSurvey.id)
             assertNotEquals(survey.status, updatedSurvey.status)
             assertEquals(SurveyStatus.dONE, updatedSurvey.status)
+            assertEquals(updateData.additionalInformation, updatedSurvey.additionalInformation)
+            assertNotNull(updatedSurvey.markedAsDone)
+            val markedAsDone1 = OffsetDateTime.parse(updatedSurvey.markedAsDone)
+
+            updatedSurvey = it.userA.surveys.updateSurvey(body = survey.copy(status = SurveyStatus.dRAFT))
+            assertNull(updatedSurvey.markedAsDone)
+
+            updatedSurvey = it.userA.surveys.updateSurvey(body = survey.copy(status = SurveyStatus.dONE))
+            assertNotNull(updatedSurvey.markedAsDone)
+            val markedAsDone2 = OffsetDateTime.parse(updatedSurvey.markedAsDone)
+
+            assertTrue(markedAsDone2.isAfter(markedAsDone1))
 
             it.userB.surveys.assertUpdateFailStatus(expectedStatus = 403, updateData)
             it.admin.surveys.assertUpdateFailStatus(expectedStatus = 404, survey.copy(id = UUID.randomUUID()))

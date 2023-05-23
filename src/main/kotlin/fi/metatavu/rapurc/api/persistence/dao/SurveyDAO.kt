@@ -5,6 +5,7 @@ import fi.metatavu.rapurc.api.model.SurveyType
 import fi.metatavu.rapurc.api.persistence.model.Survey
 import fi.metatavu.rapurc.api.persistence.model.Survey_
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.persistence.TypedQuery
@@ -30,6 +31,8 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param dateUnknown demolition date unknown
      * @param startDate start date
      * @param endDate end date
+     * @param additionalInformation additional information
+     * @param creatorDisplayName creator's display name
      * @param creatorId creator's id
      * @param lastModifierId last modifier's id
      * @return created survey
@@ -42,6 +45,8 @@ class SurveyDAO: AbstractDAO<Survey>() {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
+        creatorDisplayName: String,
         creatorId: UUID,
         lastModifierId: UUID
     ): Survey {
@@ -53,6 +58,8 @@ class SurveyDAO: AbstractDAO<Survey>() {
         survey.dateUnknown = dateUnknown
         survey.startDate = startDate
         survey.endDate = endDate
+        survey.additionalInformation = additionalInformation
+        survey.creatorDisplayName = creatorDisplayName
         survey.creatorId = creatorId
         survey.lastModifierId = lastModifierId
         return persist(survey)
@@ -193,6 +200,34 @@ class SurveyDAO: AbstractDAO<Survey>() {
     fun update(survey: Survey, lastModifierId: UUID): Survey {
         survey.lastModifierId = lastModifierId
         return persist(survey)
+    }
+
+    /**
+     * Updates additional information
+     *
+     * @param survey survey to update
+     * @param additionalInformation new additional information
+     * @param lastModifierId last modifier's id
+     * @return updated survey
+     */
+    fun updateAdditionalInformation(survey: Survey, additionalInformation: String?, lastModifierId: UUID): Survey {
+        survey.additionalInformation = additionalInformation
+        survey.lastModifierId = lastModifierId
+        return persist(survey)
+    }
+
+    /**
+     * Updates marked as done
+     *
+     * @param survey survey to update
+     * @param markedAsDone new marked as done
+     * @param lastModifierId last modifier's id
+     */
+    fun updateMarkedAsDone(survey: Survey, markedAsDone: OffsetDateTime?, lastModifierId: UUID) {
+        survey.markedAsDone = markedAsDone
+        survey.lastModifierId = lastModifierId
+        persist(survey)
+
     }
 
 }

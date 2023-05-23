@@ -4,7 +4,6 @@ import fi.metatavu.rapurc.api.impl.buildings.BuildingController
 import fi.metatavu.rapurc.api.impl.materials.ReusableController
 import fi.metatavu.rapurc.api.impl.owners.OwnerInformationController
 import fi.metatavu.rapurc.api.impl.surveyors.SurveyorController
-import fi.metatavu.rapurc.api.impl.translate.HazardousWasteTranslator
 import fi.metatavu.rapurc.api.impl.waste.HazardousWasteController
 import fi.metatavu.rapurc.api.impl.waste.WasteController
 import fi.metatavu.rapurc.api.model.SurveyStatus
@@ -12,6 +11,7 @@ import fi.metatavu.rapurc.api.model.SurveyType
 import fi.metatavu.rapurc.api.persistence.dao.SurveyDAO
 import fi.metatavu.rapurc.api.persistence.model.Survey
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
@@ -95,6 +95,8 @@ class SurveyController {
      * @param startDate estimated demolition start
      * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
+     * @param additionalInformation additional information
+     * @param creatorDisplayName creator's name
      * @param creatorId creator's ID
      * @return created survey
      */
@@ -105,8 +107,10 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
+        creatorDisplayName: String,
         creatorId: UUID
-        ): Survey {
+    ): Survey {
         return surveyDAO.create(
             id = UUID.randomUUID(),
             status = status,
@@ -115,6 +119,8 @@ class SurveyController {
             dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
+            additionalInformation = additionalInformation,
+            creatorDisplayName = creatorDisplayName,
             creatorId = creatorId,
             lastModifierId = creatorId
         )
@@ -147,12 +153,24 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        additionalInformation: String?,
         lastModifierId: UUID
     ): Survey {
+        // If survey gets the status updated as done, it should have the new markedAsUpdated value set
+        if (status == SurveyStatus.DONE && survey.status != SurveyStatus.DONE) {
+            surveyDAO.updateMarkedAsDone(survey = survey, markedAsDone = OffsetDateTime.now(), lastModifierId = lastModifierId)
+        }
+
+        // if survey is losing its done status, the markedAsDone value should be reset
+        if (status != SurveyStatus.DONE && survey.status == SurveyStatus.DONE) {
+            surveyDAO.updateMarkedAsDone(survey = survey, markedAsDone = null, lastModifierId = lastModifierId)
+        }
+
         val result = surveyDAO.updateStatus(survey = survey, status = status, lastModifierId = lastModifierId)
         surveyDAO.updateDateUnknown(survey = result, dateUnknown = dateUnknown, lastModifierId = lastModifierId)
         surveyDAO.updateStartDate(survey = result, startDate = startDate, lastModifierId = lastModifierId)
         surveyDAO.updateEndDate(survey = result, endDate = endDate, lastModifierId = lastModifierId)
+        surveyDAO.updateAdditionalInformation(survey = result, additionalInformation = additionalInformation, lastModifierId = lastModifierId)
         return result
     }
 
