@@ -21,6 +21,7 @@ import javax.annotation.security.RolesAllowed
 import javax.enterprise.context.RequestScoped
 import javax.inject.Inject
 import javax.transaction.Transactional
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 /**
@@ -1248,7 +1249,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
     }
 
     /* USER GROUPS */
-    override fun listUserGroups(): Response {
+    override fun listUserGroups(email: String?): Response? {
         TODO("Not yet implemented")
     }
 
