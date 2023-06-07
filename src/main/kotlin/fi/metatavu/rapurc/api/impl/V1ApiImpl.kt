@@ -1247,6 +1247,73 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createNoContent()
     }
 
+    /* USER GROUPS */
+    override fun listUserGroups(): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun createUserGroup(userGroup: UserGroup?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun findUserGroup(groupId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateUserGroup(groupId: UUID?, userGroup: UserGroup?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteUserGroup(groupId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    /* GROUP REQUESTS */
+
+    override fun listGroupJoinRequests(groupId: UUID?, status: JoinRequestStatus?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun createGroupJoinRequest(groupId: UUID?, groupJoinRequest: GroupJoinRequest?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun findGroupJoinRequest(groupId: UUID?, requestId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateGroupJoinRequest(groupId: UUID?, requestId: UUID?, groupJoinRequest: GroupJoinRequest?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteGroupJoinRequest(groupId: UUID?, requestId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    /* GROUP INVITATIONS */
+
+    override fun listGroupJoinInvites(groupId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun createGroupJoinInvite(groupId: UUID?, groupJoinInvite: GroupJoinInvite?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun findGroupJoinInvite(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun sendGroupJoinInviteEmail(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteGroupJoinInvite(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+
+
     override fun ping(): Response {
         return createOk("pong")
     }
