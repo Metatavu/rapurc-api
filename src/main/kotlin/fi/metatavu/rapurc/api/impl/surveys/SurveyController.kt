@@ -4,7 +4,6 @@ import fi.metatavu.rapurc.api.impl.buildings.BuildingController
 import fi.metatavu.rapurc.api.impl.materials.ReusableController
 import fi.metatavu.rapurc.api.impl.owners.OwnerInformationController
 import fi.metatavu.rapurc.api.impl.surveyors.SurveyorController
-import fi.metatavu.rapurc.api.impl.translate.HazardousWasteTranslator
 import fi.metatavu.rapurc.api.impl.waste.HazardousWasteController
 import fi.metatavu.rapurc.api.impl.waste.WasteController
 import fi.metatavu.rapurc.api.model.SurveyStatus
@@ -97,6 +96,7 @@ class SurveyController {
      * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
      * @param additionalInformation additional information
+     * @param creatorDisplayName creator's name
      * @param creatorId creator's ID
      * @return created survey
      */
@@ -108,8 +108,9 @@ class SurveyController {
         startDate: LocalDate?,
         endDate: LocalDate?,
         additionalInformation: String?,
+        creatorDisplayName: String,
         creatorId: UUID
-        ): Survey {
+    ): Survey {
         return surveyDAO.create(
             id = UUID.randomUUID(),
             status = status,
@@ -119,6 +120,7 @@ class SurveyController {
             startDate = startDate,
             endDate = endDate,
             additionalInformation = additionalInformation,
+            creatorDisplayName = creatorDisplayName,
             creatorId = creatorId,
             lastModifierId = creatorId
         )
