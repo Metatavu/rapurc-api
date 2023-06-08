@@ -449,6 +449,7 @@
     "firstName": "first name",
     "lastName": "last name",
     "enabled" : true,
+    "email": "usera@example.com",
     "totp" : false,
     "emailVerified" : true,
     "credentials" : [ {
@@ -468,6 +469,7 @@
     "createdTimestamp" : 1635259152391,
     "username" : "user_b",
     "enabled" : true,
+    "email": "userb@example.com",
     "totp" : false,
     "emailVerified" : true,
     "credentials" : [ {

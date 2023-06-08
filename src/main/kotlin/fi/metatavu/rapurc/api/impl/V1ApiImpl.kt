@@ -125,6 +125,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     lateinit var attachmentTranslator: AttachmentTranslator
 
+    @Inject
+    lateinit var userGroupTranslator: UserGroupTranslator
+
 
     /* SURVEYS */
 
@@ -143,7 +146,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         var groupId: UUID? = null
         if (!isAdmin()) {
-            groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
+            groupId = keycloakController.getUserGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
         }
 
         val surveys = surveyController.list(
@@ -167,7 +170,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         survey ?: return createBadRequest(MISSING_REQUEST_BODY)
         val status = survey.status
 
-        val groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
+        val groupId = keycloakController.getUserGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
         val surveyCreatorDisplayName = keycloakController.getDisplayName(userId) ?: return createForbidden("User name not found")
         val createdSurvey = surveyController.create(
             status = status,
@@ -1249,6 +1252,139 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createNoContent()
     }
 
+    /* USER GROUPS */
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listUserGroups(adminEmail: String?): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val groups = if (!adminEmail.isNullOrEmpty()) {
+            val adminUser = keycloakController.findUserByEmail(adminEmail) ?: return createNotFound("No $USER found with email $adminEmail")
+            if (adminUser.id != userId.toString()) {
+                return createForbidden("User $userId is not allowed to list groups for admin $adminEmail")
+            }
+            keycloakController.listGroupsForAdmin(UUID.fromString(adminUser.id))
+        } else {
+            keycloakController.listGroups()
+        }
+        return createOk(groups.map(userGroupTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun createUserGroup(userGroup: UserGroup): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        if (keycloakController.findGroupByName(userGroup.name) != null) {
+            return createBadRequest("Group with name ${userGroup.name} already exists")
+        }
+
+        val createdGroup = keycloakController.createGroup(userGroup.name) ?: return createInternalServerError("Could not create group")
+        keycloakController.assignAsGroupAdmin(
+            groupId = createdGroup.id,
+            userId = userId
+        )
+
+        return createOk(userGroupTranslator.translate(createdGroup))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun findUserGroup(groupId: UUID): Response {
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        return createOk(userGroupTranslator.translate(group))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun updateUserGroup(groupId: UUID, userGroup: UserGroup): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val existingGroup = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (userGroup.id == null || existingGroup.id != userGroup.id.toString()) {
+            return createBadRequest("Group id ${userGroup.id} does not match path parameter $groupId")
+        }
+
+        if (!isGroupAdmin(groupId = groupId, userId = userId)) {
+            return createForbidden("User $userId is not allowed to update group $groupId")
+        }
+
+        val groupWithSameName = keycloakController.findGroupByName(userGroup.name)
+        if (groupWithSameName != null && groupWithSameName.id != groupId.toString()) {
+            return createBadRequest("Another group with name ${userGroup.name} already exists")
+        }
+
+        keycloakController.updateGroup(groupId, userGroup.name)
+        val updatedGroup = keycloakController.findGroupById(userGroup.id) ?: return createInternalServerError("Could not update group")
+        return createOk(userGroupTranslator.translate(updatedGroup))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteUserGroup(groupId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+
+        if (!isGroupAdmin(groupId = groupId, userId = userId)) {
+            return createForbidden("User $userId is not allowed to delete group $groupId")
+        }
+
+        keycloakController.deleteGroup(groupId)
+        keycloakController.unassignAsGroupAdmin(
+            groupId = groupId.toString(),
+            userId = userId
+        )
+
+        return createNoContent()
+    }
+
+    /* GROUP REQUESTS */
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun listGroupJoinRequests(groupId: UUID?, status: JoinRequestStatus?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun createGroupJoinRequest(groupId: UUID?, groupJoinRequest: GroupJoinRequest?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun findGroupJoinRequest(groupId: UUID?, requestId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun updateGroupJoinRequest(groupId: UUID?, requestId: UUID?, groupJoinRequest: GroupJoinRequest?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun deleteGroupJoinRequest(groupId: UUID?, requestId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    /* GROUP INVITATIONS */
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun listGroupJoinInvites(groupId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun createGroupJoinInvite(groupId: UUID?, groupJoinInvite: GroupJoinInvite?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun findGroupJoinInvite(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun sendGroupJoinInviteEmail(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name ])
+    override fun deleteGroupJoinInvite(groupId: UUID?, inviteId: UUID?): Response {
+        TODO("Not yet implemented")
+    }
+
+
+
     override fun ping(): Response {
         return createOk("pong")
     }
@@ -1262,7 +1398,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
      */
     private fun surveyAccessRightsCheck(userId: UUID, survey: fi.metatavu.rapurc.api.persistence.model.Survey): Response? {
         if (!isAdmin()) {
-            val groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
+            val groupId = keycloakController.getUserGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
             if (groupId != survey.keycloakGroupId) {
                 return createForbidden(createWrongGroupMessage(userId = userId))
             }
@@ -1283,6 +1419,17 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
 
         return null
+    }
+
+    /**
+     * Checks if user has admin rights for the group
+     *
+     * @param userId user id
+     * @param groupId group id
+     * @return true if user has admin rights for the group
+     */
+    private fun isGroupAdmin(userId: UUID, groupId: UUID): Boolean {
+        return keycloakController.getGroupsAttributes(userId).contains(groupId.toString())
     }
 
     companion object {
@@ -1345,6 +1492,8 @@ class V1ApiImpl : V1Api, AbstractApi() {
         const val BUILDING_TYPE = "Building type"
         const val ATTACHMENT = "Attachment"
         const val MISSING_NAME = "Missing name"
+        const val USER_GROUP = "User group"
+        const val USER = "User"
     }
 
 }
