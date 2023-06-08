@@ -1381,6 +1381,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
     override fun updateGroupJoinRequest(groupId: UUID, requestId: UUID, groupJoinRequest: GroupJoinRequest): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         groupAccessRights(userId, groupId)?.let { return it }
+        if (groupId != groupJoinRequest.groupId) {
+            return createBadRequest("Group id ${groupJoinRequest.groupId} does not match path parameter $groupId")
+        }
 
         val existingRequest = groupJoinController.findGroupJoinRequest(groupId = groupId, requestId = requestId) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_REQUEST, id = requestId))
         val updatedRequest = groupJoinController.updateGroupJoinRequest(
@@ -1487,6 +1490,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
      * @return null or response if user has no rights
      */
     private fun groupAccessRights(userId: UUID, groupId: UUID): Response? {
+        keycloakController.findGroupById(groupId = groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         if (!isGroupAdmin(groupId = groupId, userId = userId)) {
             return createForbidden("User $userId is not allowed to manage group $groupId")
         }

@@ -36,7 +36,7 @@ class TestBuilderAuthentication(
     val buildingTypes: BuildingTypeTestBuilderResource = BuildingTypeTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
     val attachments: AttachmentTestBuilderResource = AttachmentTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
     val userGroups: UserGroupTestBuilderResource = UserGroupTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
-
+    val groupJounRequests: GroupJoinRequestTestBuilderResource = GroupJoinRequestTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
     /**
      * Creates a API client
      *

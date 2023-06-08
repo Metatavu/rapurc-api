@@ -2,6 +2,7 @@ package fi.metatavu.rapurc.api.persistence.dao
 
 import fi.metatavu.rapurc.api.model.JoinRequestStatus
 import fi.metatavu.rapurc.api.persistence.model.GroupJoinRequest
+import fi.metatavu.rapurc.api.persistence.model.GroupJoinRequest_
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.persistence.TypedQuery
