@@ -39,15 +39,11 @@ class UserGroupTestBuilderResource(
         )
     }
 
-    fun create(
-        userGroup: UserGroup
-    ): UserGroup {
+    fun create(userGroup: UserGroup): UserGroup {
         return addClosable(api.createUserGroup(userGroup))
     }
 
-    fun find(
-        userGroupId: UUID
-    ): UserGroup {
+    fun find(userGroupId: UUID): UserGroup {
         return api.findUserGroup(userGroupId)
     }
 
@@ -55,10 +51,7 @@ class UserGroupTestBuilderResource(
         return api.listUserGroups(adminEmail = adminEmail)
     }
 
-    fun update(
-        id: UUID,
-        userGroup: UserGroup
-    ): UserGroup {
+    fun update(id: UUID, userGroup: UserGroup): UserGroup {
         return api.updateUserGroup(id, userGroup)
     }
 
@@ -71,7 +64,6 @@ class UserGroupTestBuilderResource(
             closable.id == userGroupId
         }
     }
-
 
     fun assertCount(expected: Int) {
         Assert.assertEquals(

@@ -1253,10 +1253,8 @@ class V1ApiImpl : V1Api, AbstractApi() {
     }
 
     /* USER GROUPS */
-    @RolesAllowed(value = [ UserRole.USER.name ])
-    override fun listUserGroups(
-        adminEmail: String?
-    ): Response {
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listUserGroups(adminEmail: String?): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val groups = if (!adminEmail.isNullOrEmpty()) {
             val adminUser = keycloakController.findUserByEmail(adminEmail) ?: return createNotFound("No $USER found with email $adminEmail")
@@ -1270,7 +1268,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(groups.map(userGroupTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createUserGroup(userGroup: UserGroup): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         if (keycloakController.findGroupByName(userGroup.name) != null) {
@@ -1286,13 +1284,13 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(userGroupTranslator.translate(createdGroup))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findUserGroup(groupId: UUID): Response {
         val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         return createOk(userGroupTranslator.translate(group))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateUserGroup(groupId: UUID, userGroup: UserGroup): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val existingGroup = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
@@ -1314,7 +1312,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(userGroupTranslator.translate(updatedGroup))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteUserGroup(groupId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
