@@ -100,7 +100,7 @@ class UserGroupTestIT {
         TestBuilder().use { testBuilder ->
             val created = testBuilder.userA.userGroups.create()
 
-            testBuilder.userA.userGroups.assertDeleteFailStatus(403, UUID.randomUUID())
+            testBuilder.userA.userGroups.assertDeleteFailStatus(404, UUID.randomUUID())
             testBuilder.userB.userGroups.assertDeleteFailStatus(403, created.id!!)
 
             testBuilder.userA.userGroups.delete(created.id)
