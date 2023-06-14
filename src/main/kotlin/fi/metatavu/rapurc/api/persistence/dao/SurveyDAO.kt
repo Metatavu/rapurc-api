@@ -124,7 +124,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         if (groupIds.isNotEmpty()) {
             val groupRestrictions = ArrayList<Predicate>()
             groupIds.forEach {
-                groupRestrictions.add(criteriaBuilder.like(root.get(Survey_.keycloakgroupids), "%$it%"))
+                groupRestrictions.add(criteriaBuilder.like(root.get(Survey_.keycloakGroupIds), "%$it%"))
             }
             restrictions.add(criteriaBuilder.or(*groupRestrictions.toTypedArray()))
         }
