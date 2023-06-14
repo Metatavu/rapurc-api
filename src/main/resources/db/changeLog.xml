@@ -722,4 +722,17 @@
       </column>
     </createTable>
   </changeSet>
+  
+  <changeSet id="group_join_invites" author="katja danilova">
+    <addColumn tableName="groupjoinrequest">
+      <column name="requesttype" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet id="multi_group_surveys" author="katja danilova">
+    <modifyDataType tableName="survey" columnName="keycloakgroupid" newDataType="longtext"/>
+    <renameColumn tableName="survey" oldColumnName="keycloakgroupid" newColumnName="keycloakgroupids" columnDataType="longtext"/>
+  </changeSet>
 </databaseChangeLog>

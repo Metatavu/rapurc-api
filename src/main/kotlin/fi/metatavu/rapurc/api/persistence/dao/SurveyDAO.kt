@@ -26,7 +26,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      *
      * @param id id
      * @param status status
-     * @param keycloakGroupId keycloak group id
+     * @param keycloakGroupIds serialized list of group ids
      * @param type type
      * @param dateUnknown demolition date unknown
      * @param startDate start date
@@ -40,7 +40,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
     fun create(
         id: UUID,
         status: SurveyStatus,
-        keycloakGroupId: UUID,
+        keycloakGroupIds: String,
         type: SurveyType,
         dateUnknown: Boolean?,
         startDate: LocalDate?,
@@ -53,7 +53,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         val survey = Survey()
         survey.id = id
         survey.status = status
-        survey.keycloakGroupId = keycloakGroupId
+        survey.keycloakGroupIds = keycloakGroupIds
         survey.type = type
         survey.dateUnknown = dateUnknown
         survey.startDate = startDate
@@ -76,7 +76,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      * @param dateUnknown filter by date unknown
      * @param startDate filter after start date
      * @param endDate filter before end date
-     * @param keycloakGroupId filter by group id
+     * @param groupIds filter by group ids
      * @return List of visitor variables
      */
     fun list(
@@ -88,7 +88,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        keycloakGroupId: UUID?
+        groupIds: List<UUID>
     ): List<Survey> {
         val entityManager = getEntityManager()
         val criteriaBuilder = entityManager.criteriaBuilder
@@ -121,8 +121,12 @@ class SurveyDAO: AbstractDAO<Survey>() {
             restrictions.add(criteriaBuilder.lessThanOrEqualTo(root.get(Survey_.endDate), endDate))
         }
 
-        if (keycloakGroupId != null) {
-            restrictions.add(criteriaBuilder.equal(root.get(Survey_.keycloakGroupId), keycloakGroupId))
+        if (groupIds.isNotEmpty()) {
+            val groupRestrictions = ArrayList<Predicate>()
+            groupIds.forEach {
+                groupRestrictions.add(criteriaBuilder.like(root.get(Survey_.keycloakgroupids), "%$it%"))
+            }
+            restrictions.add(criteriaBuilder.or(*groupRestrictions.toTypedArray()))
         }
 
         criteria.select(root)

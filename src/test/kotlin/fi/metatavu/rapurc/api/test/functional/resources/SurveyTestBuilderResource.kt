@@ -78,14 +78,14 @@ class SurveyTestBuilderResource(
      * @return found surveys
      */
     fun listSurveys(
-        firstResult: Int?,
-        maxResult: Int?,
-        address: String?,
-        status: SurveyStatus?,
-        type: SurveyType?,
-        dateUnknown: Boolean?,
-        startDate: String?,
-        endDate: String?
+        firstResult: Int? = null,
+        maxResult: Int? = null,
+        address: String? = null,
+        status: SurveyStatus? = null,
+        type: SurveyType? = null,
+        dateUnknown: Boolean? = null,
+        startDate: String? = null,
+        endDate: String? = null
     ): Array<Survey> {
         return api.listSurveys(
             firstResult = firstResult,

@@ -39,6 +39,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jboss.logging:commons-logging-jboss-logging")
+    implementation("net.sargue:mailgun:1.9.2")
 
     testImplementation("com.squareup.okhttp3:okhttp")
     testImplementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
@@ -49,6 +50,7 @@ dependencies {
     testImplementation("org.testcontainers:mysql:$testContainersVersion")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("com.github.dasniko:testcontainers-keycloak:$testContainersKeycloakVersion")
+    testImplementation("com.github.tomakehurst:wiremock-jre8:2.34.0")
     kapt("org.hibernate:hibernate-jpamodelgen:5.5.7.Final")
 }
 

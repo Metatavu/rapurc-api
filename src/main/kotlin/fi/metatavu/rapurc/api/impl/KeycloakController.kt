@@ -72,6 +72,36 @@ class KeycloakController {
     }
 
     /**
+     * Finds user by id
+     *
+     * @param userId user id
+     * @return found user or null
+     */
+    fun findUserById(userId: UUID): UserRepresentation? {
+        return try {
+            realm().users().get(userId.toString()).toRepresentation()
+        } catch (e: Exception) {
+            logger.error("Failed to find user by id", e)
+            null
+        }
+    }
+
+    /**
+     * Finds user who is admin of given group (has it listed in its attributes). Only one admin per group is possible
+     *
+     * @param group group
+     * @return group admin user or null
+     */
+    fun findGroupAdmin(group: GroupRepresentation): UserRepresentation? {
+        return try {
+            realm().groups().group(group.id).members().find { it.attributes?.get(GROUP_ATTRIBUTE_TITLE)?.contains(group.id) == true }
+        } catch (e: Exception) {
+            logger.error("Failed to find admin of the group ${group.id}", e)
+            null
+        }
+    }
+
+    /**
      * Gets map of all user's attributes
      *
      * @param userId user id
@@ -121,9 +151,9 @@ class KeycloakController {
      * @param userId user id
      * @param groupId group id
      */
-    fun addUserToGroup(userId: UUID, groupId: UUID) {
+    fun addUserToGroup(userId: String, groupId: String) {
         try {
-            realm().users().get(userId.toString()).joinGroup(groupId.toString())
+            realm().users().get(userId).joinGroup(groupId)
         } catch (e: Exception) {
             logger.error("Failed to add user to group", e)
         }
@@ -150,6 +180,7 @@ class KeycloakController {
      * @param userId user id
      */
     fun assignAsGroupAdmin(groupId: String, userId: UUID) {
+        addUserToGroup(userId.toString(), groupId)
         val groups = getGroupsAttributes(userId)
         groups.add(groupId)
         updateUserAttributes(userId, mapOf(GROUP_ATTRIBUTE_TITLE to groups))
@@ -188,18 +219,18 @@ class KeycloakController {
     }
 
     /**
-     * Gets ID of the group user belongs to
+     * Gets IDs of the groups user belongs to
      *
      * @param userId user id
-     * @return user group id if belongs to any
+     * @return user group id list if belongs to any
      */
-    fun getUserGroupId(userId: UUID): UUID? {
-        val groups = realm().users().get(userId.toString())?.groups() ?: return null
+    fun getUserGroups(userId: UUID): List<UUID> {
+        val groups = realm().users().get(userId.toString())?.groups() ?: return emptyList()
         if (groups.size >= 1) {
-            return UUID.fromString(groups[0].id)
+            return groups.map { UUID.fromString(it.id) }
         }
 
-        return null
+        return emptyList()
     }
 
     /**
