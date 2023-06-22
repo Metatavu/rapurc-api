@@ -23,4 +23,16 @@ class GroupJoinRequest : Metadata() {
     @Enumerated(javax.persistence.EnumType.STRING)
     lateinit var status: JoinRequestStatus
 
+    @Column(nullable = false)
+    @Enumerated(javax.persistence.EnumType.STRING)
+    lateinit var requestType: JoinRequestType
+}
+
+/**
+ * Type of request, where invite means that user is offered to join the group and request means
+ * that user is asking to join
+ */
+enum class JoinRequestType {
+    INVITE,
+    REQUEST
 }

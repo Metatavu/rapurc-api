@@ -23,7 +23,7 @@ class Survey: Metadata() {
     var status: SurveyStatus? = null
 
     @Column(nullable = false)
-    var keycloakGroupId: UUID? = null
+    var keycloakGroupIds: String? = null
 
     @Enumerated(EnumType.STRING)
     var type: SurveyType? = null

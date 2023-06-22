@@ -1,8 +1,5 @@
 package fi.metatavu.rapurc.api.test.functional.tests
 
-import fi.metatavu.rapurc.api.client.models.Address
-import fi.metatavu.rapurc.api.client.models.Building
-import fi.metatavu.rapurc.api.client.models.Metadata
 import fi.metatavu.rapurc.api.client.models.OtherStructure
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
 import fi.metatavu.rapurc.api.test.functional.resources.KeycloakTestResource

@@ -3,6 +3,7 @@ package fi.metatavu.rapurc.api.persistence.dao
 import fi.metatavu.rapurc.api.model.JoinRequestStatus
 import fi.metatavu.rapurc.api.persistence.model.GroupJoinRequest
 import fi.metatavu.rapurc.api.persistence.model.GroupJoinRequest_
+import fi.metatavu.rapurc.api.persistence.model.JoinRequestType
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.persistence.TypedQuery
@@ -23,6 +24,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
      * @param email email of user wishing to join
      * @param groupId group id
      * @param status status
+     * @param type type of the join request
      * @param creatorId creator id
      * @param lastModifierId last modifier id
      */
@@ -31,6 +33,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         email: String,
         groupId: UUID,
         status: JoinRequestStatus,
+        type: JoinRequestType,
         creatorId: UUID,
         lastModifierId: UUID
     ): GroupJoinRequest {
@@ -39,6 +42,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         groupJoinRequest.email = email
         groupJoinRequest.groupId = groupId
         groupJoinRequest.status = status
+        groupJoinRequest.requestType = type
         groupJoinRequest.creatorId = creatorId
         groupJoinRequest.lastModifierId = lastModifierId
         return persist(groupJoinRequest)
@@ -47,11 +51,18 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
     /**
      * Lists group join requests
      *
+     * @param type join request type
      * @param groupId group id
+     * @param email email of user joining
      * @param status status
      * @return list of group join requests
      */
-    fun list(groupId: UUID, status: JoinRequestStatus?): List<GroupJoinRequest> {
+    fun list(
+        type: JoinRequestType?,
+        groupId: UUID,
+        email: String?,
+        status: JoinRequestStatus?
+    ): List<GroupJoinRequest> {
         val entityManager = getEntityManager()
         val criteriaBuilder = entityManager.criteriaBuilder
         val criteria: CriteriaQuery<GroupJoinRequest> = criteriaBuilder.createQuery(GroupJoinRequest::class.java)
@@ -59,6 +70,14 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         val restrictions = ArrayList<Predicate>()
 
         restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.groupId), groupId))
+
+        if (type != null) {
+            restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.requestType), type))
+        }
+
+        if (email != null) {
+            restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.email), email))
+        }
 
         if (status != null) {
             restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.status), status))
