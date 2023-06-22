@@ -2,6 +2,7 @@ package fi.metatavu.rapurc.api.impl.groups
 
 import fi.metatavu.rapurc.api.impl.KeycloakController
 import fi.metatavu.rapurc.api.impl.email.EmailController
+import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.model.JoinRequestStatus
 import fi.metatavu.rapurc.api.persistence.dao.GroupJoinRequestDAO
 import fi.metatavu.rapurc.api.persistence.model.GroupJoinRequest
@@ -68,8 +69,8 @@ class GroupJoinController {
             informGroupAdmin(
                 admin = groupAdmin,
                 user = joiningUser,
-                subject = "User $userFullName has requested to join group $groupName",
-                body = "User $userFullName has requested to join group $groupName. Please log in to the system to accept or reject the request."
+                subject = Templates.joinRequestEmailSubject(userFullName, groupName).render(),
+                body = Templates.joinRequestEmail(userFullName, groupName).render(),
             )
             return groupJoinRequestDAO.create(
                 id = UUID.randomUUID(),
@@ -84,8 +85,8 @@ class GroupJoinController {
             informUser(
                 user = joiningUser,
                 admin = groupAdmin,
-                subject = "You were invited to join group $groupName",
-                body = "You were invited to join group $groupName. Please log in to the system to accept or reject the invitation."
+                subject = Templates.userInviteEmailSubject(groupName).render(),
+                body =  Templates.userInviteEmail(groupName).render()
             )
             return groupJoinRequestDAO.create(
                 id = UUID.randomUUID(),
@@ -156,16 +157,16 @@ class GroupJoinController {
                 // if user's request to join got updated, he/she will get email about acceptance or rejection
                 informUser(
                     user = joiningUser,
-                    subject = "Your group join request was updated",
+                    subject = Templates.joinRequestUpdateEmailSubject(newStatus.name.lowercase(), groupName).render(),
                     admin = targetGroupAdmin,
-                    body = "Your request to join $groupName group has been updated to ${newStatus.name.lowercase()}",
+                    body = Templates.joinRequestUpdateEmail(newStatus.name.lowercase(), groupName).render()
                 )
             }
             JoinRequestType.INVITE -> {
                 //if invited user accepts or rejects the invite inform the admin
                 informGroupAdmin(
-                    subject = "Your group join invitation was updated",
-                    body = "User $userName has updated your invitation to join group $groupName to ${newStatus.name.lowercase()}",
+                    subject = Templates.userInviteUpdateEmailSubject(userName, newStatus.name.lowercase(), groupName).render(),
+                    body = Templates.userInviteUpdateEmail(userName, newStatus.name.lowercase(), groupName).render(),
                     admin = targetGroupAdmin,
                     user = joiningUser
                 )

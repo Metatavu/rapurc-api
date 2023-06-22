@@ -3,6 +3,7 @@ package fi.metatavu.rapurc.api.impl
 import fi.metatavu.rapurc.api.UserRole
 import fi.metatavu.rapurc.api.impl.buildings.BuildingController
 import fi.metatavu.rapurc.api.impl.buildings.BuildingTypeController
+import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.impl.groups.GroupJoinController
 import fi.metatavu.rapurc.api.impl.materials.HazardousMaterialController
 import fi.metatavu.rapurc.api.impl.materials.ReusableController
@@ -1523,8 +1524,8 @@ class V1ApiImpl : V1Api, AbstractApi() {
         groupJoinController.informUser(
             user = invitedUser,
             admin = groupAdmin,
-            subject = "You were invited to join group ${group.name}",
-            body = "You were invited to join group ${group.name}. Please log in to the system to accept or reject the invitation."
+            subject = Templates.userInviteEmailSubject(group.name).render(),
+            body = Templates.userInviteEmail(group.name).render(),
         )
 
         return createNoContent()
