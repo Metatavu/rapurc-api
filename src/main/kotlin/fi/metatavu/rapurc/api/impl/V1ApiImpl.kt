@@ -1366,12 +1366,11 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("User $userId is not allowed to create join request for user ${groupJoinRequest.email}")
         }
 
-        val createdRequest = groupJoinController.createGroupJoin(
+        val createdRequest = groupJoinController.createGroupJoinRequest(
             joiningUser = userToJoin,
             groupId = groupId,
             groupName = group.name,
             groupAdmin = groupAdmin,
-            type = JoinRequestType.REQUEST,
             userId = userId
         )
 
@@ -1468,11 +1467,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
         val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
-        val invitedUser = keycloakController.findUserByEmail(groupJoinInvite.email) ?: return createNotFound("No $USER found with email ${groupJoinInvite.email}")
 
-        val createdInvite = groupJoinController.createGroupJoin(
-            joiningUser = invitedUser,
-            type = JoinRequestType.INVITE,
+        val createdInvite = groupJoinController.createGroupInvite(
+            joiningUserEmail = groupJoinInvite.email,
             groupId = groupId,
             groupName = group.name,
             groupAdmin = groupAdmin,
@@ -1518,10 +1515,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
-        val invitedUser = keycloakController.findUserById(userId) ?: return createNotFound(createNotFoundMessage(target = USER, id = userId))
 
         groupJoinController.informUser(
-            user = invitedUser,
+            userEmail = existingInvite.email,
             admin = groupAdmin,
             subject = "You were invited to join group ${group.name}",
             body = "You were invited to join group ${group.name}. Please log in to the system to accept or reject the invitation."
