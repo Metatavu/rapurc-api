@@ -170,8 +170,8 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 // now A has access to 2 B's surveys
                 Assertions.assertEquals(3, testBuilder.userA.surveys.listSurveys().size)
 
-                val joinSubjectUpdateExpected = Templates.joinRequestUpdateEmailSubject("accepted", "group 2").render()
-                val joinBodyUpdateExpected = Templates.joinRequestUpdateEmail("accepted", "group 2").render()
+                val joinSubjectUpdateExpected = Templates.joinRequestAcceptedEmailSubject("group 2").render()
+                val joinBodyUpdateExpected = Templates.joinRequestAcceptedEmail("group 2").render()
                 wireMock.verifyTextMessageSent(
                     fromEmail = "userb@example.com",
                     to = "usera@example.com",

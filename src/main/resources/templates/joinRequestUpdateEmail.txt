@@ -1,1 +1,0 @@
-Your request to join {groupName} group has been updated to {newStatus}.

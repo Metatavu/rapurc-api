@@ -1,1 +1,2 @@
-User {userFullName} has requested to join group {groupName}. Please log in to the system to accept or reject the request.
+<p>Käyttäjä {userFullName} on pyytänyt lupaa riittyä ryhmääsi {groupName}.</p>
+<p>Voit hyväksyä tai hylätä kutsun ryhmänhallinnasta kutsut -välilehdeltä.</p>

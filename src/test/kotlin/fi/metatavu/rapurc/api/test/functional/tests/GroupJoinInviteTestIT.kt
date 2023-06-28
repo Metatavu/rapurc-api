@@ -192,8 +192,8 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             mailgunMocker.verifyTextMessageSent(
                 fromEmail = userBEmail,
                 to = userAEmail,
-                subject = Templates.userInviteUpdateEmailSubject("user_b", "accepted", "group 1").render(),
-                content = Templates.userInviteUpdateEmail("user_b", "accepted", "group 1").render()
+                subject = Templates.userInviteAcceptedEmailSubject("user_b", "group 1").render(),
+                content = Templates.userInviteAcceptedEmail("user_b", "group 1").render()
             )
         }
     }

@@ -1,0 +1,1 @@
+<p>Käyttäjä {invitedUserFullName} on kieltäytynyt kutsustasi liittyä ryhmään {groupName}.</p>

@@ -1,1 +1,1 @@
-You were invited to join group {groupName}. Please log in to the system to accept or reject the invitation.
+Purkukartoitus.fi - Uusi liittymiskutsu ryhmääsi {groupName}

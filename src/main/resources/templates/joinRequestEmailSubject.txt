@@ -1,1 +1,1 @@
-User {userFullName} has requested to join group {groupName}. Please log in to the system to accept or reject the request.
+Purkukartoitus.fi - Uusi pyyntö liittyä ryhmään {groupName}

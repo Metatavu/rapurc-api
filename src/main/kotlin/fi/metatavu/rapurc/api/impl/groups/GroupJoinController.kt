@@ -169,22 +169,40 @@ class GroupJoinController {
 
         when (request.requestType) {
             JoinRequestType.REQUEST -> {
-                // if user's request to join got updated, he/she will get email about acceptance or rejection
-                informUser(
-                    userEmail = joiningUser.email,
-                    subject = Templates.joinRequestUpdateEmailSubject(newStatus.name.lowercase(), groupName).render(),
-                    admin = targetGroupAdmin,
-                    body = Templates.joinRequestUpdateEmail(newStatus.name.lowercase(), groupName).render()
-                )
+                // if admin accepts or rejects the request inform the user
+                when (newStatus) {
+                    JoinRequestStatus.ACCEPTED -> informUser(
+                        userEmail = joiningUser.email,
+                        body = Templates.joinRequestAcceptedEmail(groupName).render(),
+                        admin = targetGroupAdmin,
+                        subject = Templates.joinRequestAcceptedEmailSubject(groupName).render()
+                    )
+                    JoinRequestStatus.REJECTED -> informUser(
+                        userEmail = joiningUser.email,
+                        body = Templates.joinRequestRejectedEmail(groupName).render(),
+                        admin = targetGroupAdmin,
+                        subject = Templates.joinRequestRejectedEmailSubject(groupName).render()
+                    )
+                    else -> {}
+                }
             }
             JoinRequestType.INVITE -> {
                 //if invited user accepts or rejects the invite inform the admin
-                informGroupAdmin(
-                    subject = Templates.userInviteUpdateEmailSubject(userName, newStatus.name.lowercase(), groupName).render(),
-                    body = Templates.userInviteUpdateEmail(userName, newStatus.name.lowercase(), groupName).render(),
-                    admin = targetGroupAdmin,
-                    user = joiningUser
-                )
+                when (newStatus) {
+                    JoinRequestStatus.ACCEPTED -> informGroupAdmin(
+                        body = Templates.userInviteAcceptedEmail(userName, groupName).render(),
+                        subject = Templates.userInviteAcceptedEmailSubject(userName, groupName).render(),
+                        admin = targetGroupAdmin,
+                        user = joiningUser
+                    )
+                    JoinRequestStatus.REJECTED -> informGroupAdmin(
+                        body = Templates.userInviteRejectedEmail(userName, groupName).render(),
+                        subject = Templates.userInviteRejectedEmailSubject(userName, groupName).render(),
+                        admin = targetGroupAdmin,
+                        user = joiningUser
+                    )
+                    else -> {}
+                }
             }
         }
 
