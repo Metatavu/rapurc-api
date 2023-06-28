@@ -1377,7 +1377,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
 
-        val groupJoinRequests = groupJoinController.listGroupJoins(groupId = groupId, status = status)
+        val groupJoinRequests = groupJoinController.listGroupJoins(type = JoinRequestType.REQUEST, groupId = groupId, status = status)
         return createOk(groupJoinRequests.map(groupJoinRequestTranslator::translate))
     }
 

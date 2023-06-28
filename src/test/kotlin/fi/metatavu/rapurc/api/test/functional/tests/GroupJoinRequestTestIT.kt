@@ -48,6 +48,9 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 Assertions.assertEquals(group2.id, createdRequest.groupId)
                 Assertions.assertEquals("usera@example.com", createdRequest.email)
                 Assertions.assertEquals(JoinRequestStatus.pENDING, createdRequest.status)
+                Assertions.assertEquals("first name", createdRequest.firstName)
+                Assertions.assertEquals("last name", createdRequest.lastName)
+                Assertions.assertEquals("user_a", createdRequest.username)
                 Assertions.assertNotNull(createdRequest.metadata?.creatorId)
                 Assertions.assertNotNull(createdRequest.metadata?.createdAt)
 
