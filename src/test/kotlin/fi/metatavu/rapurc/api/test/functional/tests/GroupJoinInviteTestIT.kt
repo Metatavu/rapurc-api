@@ -66,7 +66,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
                 content = bodyExpected
             )
 
-            testBuilder.userA.groupJoinInvites.assertCreateFailStatus(group1.id, createdInvite.copy(email = "invalidemail"), 404)
+            testBuilder.userA.groupJoinInvites.create(group1.id, createdInvite.copy(email = "notregisteredemail@exmaple.com"))
             testBuilder.userA.groupJoinInvites.assertCreateFailStatus(group1.id, createdInvite.copy(groupId = group2.id!!), 400)
             testBuilder.userA.groupJoinInvites.assertCreateFailStatus(group2.id, createdInvite.copy(groupId = UUID.randomUUID()), 403)
             testBuilder.userA.groupJoinInvites.assertCreateFailStatus(UUID.randomUUID(), createdInvite, 404)
@@ -134,7 +134,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             )
 
             // user a invites user c to join its group
-            testBuilder.userA.groupJoinInvites.create(group1.id!!,
+            testBuilder.userA.groupJoinInvites.create(group1.id,
                 GroupJoinInvite(
                     email = "userc@example.com",
                     groupId = group1.id,

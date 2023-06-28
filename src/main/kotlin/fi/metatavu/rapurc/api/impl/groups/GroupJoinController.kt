@@ -50,22 +50,20 @@ class GroupJoinController {
      * Creates request to join group
      *
      * @param joiningUser user which is going to be added to the group
-     * @param type invite or request type
      * @param groupId target group id
      * @param groupName target group name
      * @param groupAdmin target group admin
      * @param userId creator id
+     * @return created join request
      */
-    fun createGroupJoin(
+    fun createGroupJoinRequest(
         joiningUser: UserRepresentation,
-        type: JoinRequestType,
         groupId: UUID,
         groupName: String,
         groupAdmin: UserRepresentation,
         userId: UUID
     ): GroupJoinRequest {
         val userFullName = joiningUser.firstName + " " + joiningUser.lastName
-        if (type == JoinRequestType.REQUEST) {
             informGroupAdmin(
                 admin = groupAdmin,
                 user = joiningUser,
@@ -81,23 +79,40 @@ class GroupJoinController {
                 creatorId = userId,
                 lastModifierId = userId
             )
-        } else {
+    }
+
+    /**
+     * Creates invitation to the group
+     *
+     * @param joiningUserEmail invited email
+     * @param groupId target group id
+     * @param groupName target group name
+     * @param groupAdmin target group admin
+     * @param userId creator id
+     * @return created invite
+     */
+    fun createGroupInvite(
+        joiningUserEmail: String,
+        groupId: UUID,
+        groupName: String,
+        groupAdmin: UserRepresentation,
+        userId: UUID
+    ): GroupJoinRequest {
             informUser(
-                user = joiningUser,
+                userEmail = joiningUserEmail,
                 admin = groupAdmin,
                 subject = Templates.userInviteEmailSubject(groupName).render(),
                 body =  Templates.userInviteEmail(groupName).render()
             )
             return groupJoinRequestDAO.create(
                 id = UUID.randomUUID(),
-                email = joiningUser.email,
+                email = joiningUserEmail,
                 groupId = groupId,
                 status = JoinRequestStatus.PENDING,
                 type = JoinRequestType.INVITE,
                 creatorId = userId,
                 lastModifierId = userId
             )
-        }
     }
 
     /**
@@ -156,7 +171,7 @@ class GroupJoinController {
             JoinRequestType.REQUEST -> {
                 // if user's request to join got updated, he/she will get email about acceptance or rejection
                 informUser(
-                    user = joiningUser,
+                    userEmail = joiningUser.email,
                     subject = Templates.joinRequestUpdateEmailSubject(newStatus.name.lowercase(), groupName).render(),
                     admin = targetGroupAdmin,
                     body = Templates.joinRequestUpdateEmail(newStatus.name.lowercase(), groupName).render()
@@ -188,14 +203,14 @@ class GroupJoinController {
     /**
      * Sends email to user
      *
-     * @param user joining user to get email
+     * @param userEmail joining user to get email
      * @param admin admin sending the email
      * @param subject emails subkect
      * @param body email body
      */
-    fun informUser(user: UserRepresentation, admin: UserRepresentation, subject: String, body: String) {
+    fun informUser(userEmail: String, admin: UserRepresentation, subject: String, body: String) {
         emailController.sendEmail(
-            to = user.email,
+            to = userEmail,
             from = admin.email,
             subject = subject,
             content = body

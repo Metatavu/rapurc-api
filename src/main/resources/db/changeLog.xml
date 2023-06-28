@@ -732,7 +732,23 @@
   </changeSet>
   
   <changeSet id="multi_group_surveys" author="katja danilova">
-    <modifyDataType tableName="survey" columnName="keycloakgroupid" newDataType="longtext"/>
-    <renameColumn tableName="survey" oldColumnName="keycloakgroupid" newColumnName="keycloakgroupids" columnDataType="longtext"/>
+    <createTable tableName="temporary_storage">
+      <column name="survey_id" type="binary(16)"/>
+      <column name="keycloakgroupid" type="binary(16)"/>
+    </createTable>
+    <sql>
+        INSERT INTO temporary_storage (keycloakgroupid, survey_id)
+        SELECT keycloakgroupid, id
+        FROM survey
+        WHERE keycloakgroupid IS NOT NULL
+    </sql>
+    <dropColumn tableName="survey" columnName="keycloakgroupid"/>
+    <addColumn tableName="survey">
+      <column name="keycloakgroupids" type="longtext"/>
+    </addColumn>
+    <sql>
+        update survey set keycloakgroupids =(select LOWER(CONCAT(LEFT(HEX(keycloakgroupid), 8), '-',MID(HEX(keycloakgroupid), 9, 4), '-', MID(HEX(keycloakgroupid), 13, 4), '-',MID(HEX(keycloakgroupid), 17, 4), '-',RIGHT(HEX(keycloakgroupid), 12))) from temporary_storage where survey.id = temporary_storage.survey_id);
+    </sql>
+    <dropTable tableName="temporary_storage"/>
   </changeSet>
 </databaseChangeLog>

@@ -140,6 +140,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     lateinit var groupJoinInviteTranslator: GroupInviteRequestTranslator
 
+    @Inject
+    lateinit var userTranslator: UserTranslator
+
     /* SURVEYS */
 
     @RolesAllowed(value = [ UserRole.USER.name ])
@@ -1341,6 +1344,33 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createNoContent()
     }
 
+    /* GROUP MEMBERS */
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupMembers(groupId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        val groupMembers = keycloakController.listGroupMembers(groupId)
+        return createOk(groupMembers.map(userTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteGroupUser(groupId: UUID, userId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        keycloakController.findUserById(userId) ?: return createNotFound(createNotFoundMessage(target = USER, id = userId))
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (groupAdmin.id == userId.toString()) {
+            return createBadRequest("Cannot remove group admin from group")
+        }
+
+        keycloakController.removeUserFromGroup(userId, groupId)
+        return createNoContent()
+    }
+
     /* GROUP REQUESTS */
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
@@ -1348,7 +1378,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
 
-        val groupJoinRequests = groupJoinController.listGroupJoins(groupId = groupId, status = status)
+        val groupJoinRequests = groupJoinController.listGroupJoins(type = JoinRequestType.REQUEST, groupId = groupId, status = status)
         return createOk(groupJoinRequests.map(groupJoinRequestTranslator::translate))
     }
 
@@ -1367,12 +1397,11 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("User $userId is not allowed to create join request for user ${groupJoinRequest.email}")
         }
 
-        val createdRequest = groupJoinController.createGroupJoin(
+        val createdRequest = groupJoinController.createGroupJoinRequest(
             joiningUser = userToJoin,
             groupId = groupId,
             groupName = group.name,
             groupAdmin = groupAdmin,
-            type = JoinRequestType.REQUEST,
             userId = userId
         )
 
@@ -1469,11 +1498,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
         val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
-        val invitedUser = keycloakController.findUserByEmail(groupJoinInvite.email) ?: return createNotFound("No $USER found with email ${groupJoinInvite.email}")
 
-        val createdInvite = groupJoinController.createGroupJoin(
-            joiningUser = invitedUser,
-            type = JoinRequestType.INVITE,
+        val createdInvite = groupJoinController.createGroupInvite(
+            joiningUserEmail = groupJoinInvite.email,
             groupId = groupId,
             groupName = group.name,
             groupAdmin = groupAdmin,
@@ -1519,10 +1546,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
-        val invitedUser = keycloakController.findUserById(userId) ?: return createNotFound(createNotFoundMessage(target = USER, id = userId))
 
         groupJoinController.informUser(
-            user = invitedUser,
+            userEmail = existingInvite.email,
             admin = groupAdmin,
             subject = Templates.userInviteEmailSubject(group.name).render(),
             body = Templates.userInviteEmail(group.name).render(),
