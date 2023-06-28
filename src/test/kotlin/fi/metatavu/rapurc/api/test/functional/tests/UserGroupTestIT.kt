@@ -150,11 +150,11 @@ class UserGroupTestIT {
 
             // Cannot remove unknown user
             tb.userA.userGroups.assertDeleteGroupUserFailStatus(404, group1.id, UUID.randomUUID())
-            tb.userA.userGroups.assertDeleteGroupUserFailStatus(404, UUID.randomUUID(), userB.id!!)
-            tb.userB.userGroups.assertDeleteGroupUserFailStatus(403, group1.id, userB.id)
+            tb.userA.userGroups.assertDeleteGroupUserFailStatus(404, UUID.randomUUID(), userB!!.id!!)
+            tb.userB.userGroups.assertDeleteGroupUserFailStatus(403, group1.id, userB.id!!)
 
             // Manually remove user B from the group and verify that it is removed
-            tb.userA.userGroups.deleteGroupUser(group1.id, userB!!.id!!)
+            tb.userA.userGroups.deleteGroupUser(group1.id, userB.id)
             val groupMembersAfterRemoval = tb.userA.userGroups.listGroupMembers(group1.id)
             assertEquals(1, groupMembersAfterRemoval.size)
 
