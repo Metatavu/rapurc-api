@@ -53,7 +53,7 @@ class MailgunMocker(private val basePath: String, private val domain: String) {
         return listOf<NameValuePair>(
             BasicNameValuePair("to", to),
             BasicNameValuePair("subject", subject),
-            BasicNameValuePair("text", content),
+            BasicNameValuePair("html", content),
             BasicNameValuePair("from", fromEmail)
         )
     }
