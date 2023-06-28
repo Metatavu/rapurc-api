@@ -340,6 +340,21 @@ class KeycloakController {
     }
 
     /**
+     * Lists group members
+     *
+     * @param groupId group id
+     * @return list of group members
+     */
+    fun listGroupMembers(groupId: UUID): List<UserRepresentation> {
+        return try {
+            realm().groups().group(groupId.toString()).members()
+        } catch (e: Exception) {
+            logger.error("Failed to list group members", e)
+            emptyList()
+        }
+    }
+
+    /**
      * Constructs a Keycloak client
      *
      * @return Keycloak client

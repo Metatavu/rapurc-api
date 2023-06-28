@@ -4,6 +4,7 @@ import fi.metatavu.jaxrs.test.functional.builder.auth.AccessTokenProvider
 import fi.metatavu.rapurc.api.client.apis.UserGroupsApi
 import fi.metatavu.rapurc.api.client.infrastructure.ApiClient
 import fi.metatavu.rapurc.api.client.infrastructure.ClientException
+import fi.metatavu.rapurc.api.client.models.User
 import fi.metatavu.rapurc.api.client.models.UserGroup
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
 import fi.metatavu.rapurc.api.test.functional.impl.ApiTestBuilderResource
@@ -65,11 +66,37 @@ class UserGroupTestBuilderResource(
         }
     }
 
+    fun listGroupMembers(groupId: UUID): Array<User> {
+        return api.listGroupMembers(groupId)
+    }
+
+    fun deleteGroupUser(groupId: UUID, userId: UUID) {
+        api.deleteGroupUser(groupId, userId)
+    }
+
     fun assertCount(expected: Int) {
         Assert.assertEquals(
             expected,
             api.listUserGroups(null).size
         )
+    }
+
+    fun assertDeleteGroupUserFailStatus(expectedStatus: Int, groupId: UUID, userId: UUID) {
+        try {
+            api.deleteGroupUser(groupId, userId)
+            fail(String.format("Expected delete group user to fail with status %d", expectedStatus))
+        } catch (e: ClientException) {
+            Assert.assertEquals(expectedStatus.toLong(), e.statusCode.toLong())
+        }
+    }
+
+    fun assertListGroupMembersFailStatus(expectedStatus: Int, groupId: UUID) {
+        try {
+            api.listGroupMembers(groupId)
+            fail(String.format("Expected list group members to fail with status %d", expectedStatus))
+        } catch (e: ClientException) {
+            Assert.assertEquals(expectedStatus.toLong(), e.statusCode.toLong())
+        }
     }
 
     fun assertListFailStatus(expectedStatus: Int, adminEmail: String? = null) {
