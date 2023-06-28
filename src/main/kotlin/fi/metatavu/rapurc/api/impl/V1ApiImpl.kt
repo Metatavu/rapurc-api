@@ -139,6 +139,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     lateinit var groupJoinInviteTranslator: GroupInviteRequestTranslator
 
+    @Inject
+    lateinit var userTranslator: UserTranslator
+
     /* SURVEYS */
 
     @RolesAllowed(value = [ UserRole.USER.name ])
@@ -1337,6 +1340,33 @@ class V1ApiImpl : V1Api, AbstractApi() {
             userId = userId
         )
 
+        return createNoContent()
+    }
+
+    /* GROUP MEMBERS */
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupMembers(groupId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        val groupMembers = keycloakController.listGroupMembers(groupId)
+        return createOk(groupMembers.map(userTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteGroupUser(groupId: UUID, userId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        keycloakController.findUserById(userId) ?: return createNotFound(createNotFoundMessage(target = USER, id = userId))
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (groupAdmin.id == userId.toString()) {
+            return createBadRequest("Cannot remove group admin from group")
+        }
+
+        keycloakController.removeUserFromGroup(userId, groupId)
         return createNoContent()
     }
 
