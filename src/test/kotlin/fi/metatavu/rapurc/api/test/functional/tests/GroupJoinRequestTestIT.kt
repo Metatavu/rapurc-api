@@ -8,6 +8,7 @@ import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
 import fi.metatavu.rapurc.api.test.functional.resources.KeycloakTestResource
 import fi.metatavu.rapurc.api.test.functional.resources.MysqlTestResource
+import fi.metatavu.rapurc.api.test.functional.settings.ApiTestSettings
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions
@@ -41,7 +42,7 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
             val joinSubjectExpected = Templates.joinRequestEmailSubject("first name last name", "group 2").render()
             val joinBodyExpected = Templates.joinRequestEmail("first name last name", "group 2").render()
             wireMock.verifyTextMessageSent(
-                fromEmail = "usera@example.com",
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = "userb@example.com",
                 subject = joinSubjectExpected,
                 content = joinBodyExpected
@@ -157,7 +158,7 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
             val joinSubjectExpected = Templates.joinRequestEmailSubject("first name last name", "group 2").render()
             val joinBodyExpected = Templates.joinRequestEmail("first name last name", "group 2").render()
             wireMock.verifyTextMessageSent(
-                fromEmail = "usera@example.com",
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = "userb@example.com",
                 subject = joinSubjectExpected,
                 content = joinBodyExpected
@@ -173,7 +174,7 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 val joinSubjectUpdateExpected = Templates.joinRequestAcceptedEmailSubject("group 2").render()
                 val joinBodyUpdateExpected = Templates.joinRequestAcceptedEmail("group 2").render()
                 wireMock.verifyTextMessageSent(
-                    fromEmail = "userb@example.com",
+                    fromEmail = ApiTestSettings.mailgunSenderEmail,
                     to = "usera@example.com",
                     subject = joinSubjectUpdateExpected,
                     content = joinBodyUpdateExpected

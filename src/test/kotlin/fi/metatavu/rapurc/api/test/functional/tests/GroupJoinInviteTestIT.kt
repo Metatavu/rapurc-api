@@ -10,6 +10,7 @@ import fi.metatavu.rapurc.api.test.functional.resources.KeycloakTestResource
 import fi.metatavu.rapurc.api.test.functional.resources.MailgunMocker
 import fi.metatavu.rapurc.api.test.functional.resources.MailgunResource
 import fi.metatavu.rapurc.api.test.functional.resources.MysqlTestResource
+import fi.metatavu.rapurc.api.test.functional.settings.ApiTestSettings
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,7 +61,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             val subjectExpected = Templates.userInviteEmailSubject("group 1").render()
             val bodyExpected = Templates.userInviteEmail("group 1").render()
             mailgunMocker.verifyTextMessageSent(
-                fromEmail = userAEmail,
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = userBEmail,
                 subject = subjectExpected,
                 content = bodyExpected
@@ -77,7 +78,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
 
             testBuilder.userA.groupJoinInvites.resendEmail(group1.id, createdInvite.id!!)
             mailgunMocker.verifyTextMessageSent(
-                fromEmail = userAEmail,
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = userBEmail,
                 subject = subjectExpected,
                 content = bodyExpected
@@ -192,13 +193,13 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             testBuilder.userC.surveys.assertFindFailStatus(403, goroup1Survey.id)
 
             mailgunMocker.verifyTextMessageSent(
-                fromEmail = userAEmail,
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = userBEmail,
                 subject = Templates.userInviteEmailSubject("group 1").render(),
                 content = Templates.userInviteEmail("group 1").render()
             )
             mailgunMocker.verifyTextMessageSent(
-                fromEmail = userBEmail,
+                fromEmail = ApiTestSettings.mailgunSenderEmail,
                 to = userAEmail,
                 subject = Templates.userInviteAcceptedEmailSubject("user_b", "group 1").render(),
                 content = Templates.userInviteAcceptedEmail("user_b", "group 1").render()
