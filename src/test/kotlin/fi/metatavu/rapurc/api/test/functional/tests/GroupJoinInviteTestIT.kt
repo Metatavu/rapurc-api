@@ -75,6 +75,14 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             val randomId = UUID.randomUUID()
             testBuilder.userA.groupJoinInvites.assertCreateFailStatus(randomId, createdInvite.copy(groupId = randomId), 404)
 
+            testBuilder.userA.groupJoinInvites.resendEmail(group1.id, createdInvite.id!!)
+            mailgunMocker.verifyTextMessageSent(
+                fromEmail = userAEmail,
+                to = userBEmail,
+                subject = subjectExpected,
+                content = bodyExpected
+            )
+
         }
     }
 
