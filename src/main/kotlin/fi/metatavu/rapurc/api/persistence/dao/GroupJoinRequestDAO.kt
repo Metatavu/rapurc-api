@@ -59,7 +59,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
      */
     fun list(
         type: JoinRequestType?,
-        groupId: UUID,
+        groupId: UUID?,
         email: String?,
         status: JoinRequestStatus?
     ): List<GroupJoinRequest> {
@@ -69,7 +69,9 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         val root: Root<GroupJoinRequest> = criteria.from(GroupJoinRequest::class.java)
         val restrictions = ArrayList<Predicate>()
 
-        restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.groupId), groupId))
+        if (groupId != null) {
+            restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.groupId), groupId))
+        }
 
         if (type != null) {
             restrictions.add(criteriaBuilder.equal(root.get(GroupJoinRequest_.requestType), type))

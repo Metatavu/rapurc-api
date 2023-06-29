@@ -1475,15 +1475,25 @@ class V1ApiImpl : V1Api, AbstractApi() {
     /* GROUP INVITATIONS */
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
-    override fun listGroupJoinInvites(groupId: UUID): Response {
+    override fun listUserGroupJoinInvites(): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val user = keycloakController.findUserById(userId) ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
-        // group admin can list the invites and users invited to the group can see their own invites
-        val filterEmail = if (groupAdminAccessRightsCheckFail(userId, groupId) == null) null else user.email
+        val groupJoinInvites = groupJoinController.listGroupJoins(
+            email = user.email,
+            type = JoinRequestType.INVITE
+        )
+        
+        return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupJoinInvites(groupId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
         val groupJoinInvites = groupJoinController.listGroupJoins(
             groupId = groupId,
-            email = filterEmail,
             type = JoinRequestType.INVITE
         )
         return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
