@@ -224,10 +224,10 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
                 )
             )
 
-            assertEquals(1, testBuilder.userB.groupJoinInvites.list(group1.id).size)
+            assertEquals(1, testBuilder.userB.groupJoinInvites.listUserInvites().size)
             testBuilder.userA.groupJoinInvites.delete(group1.id, createdInvite.id!!)
 
-            assertEquals(0, testBuilder.userB.groupJoinInvites.list(group1.id).size)
+            assertEquals(0, testBuilder.userB.groupJoinInvites.listUserInvites().size)
         }
     }
 }
