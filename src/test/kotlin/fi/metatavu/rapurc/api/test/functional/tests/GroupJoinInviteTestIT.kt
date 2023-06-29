@@ -152,11 +152,11 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             )
 
             assertEquals(2, testBuilder.userA.groupJoinInvites.list(group1.id).size)
-            assertEquals(1, testBuilder.userB.groupJoinInvites.list(group1.id).size)
-            assertEquals(1, testBuilder.userC.groupJoinInvites.list(group1.id).size)
+            testBuilder.userB.groupJoinInvites.assertListFailStatus(group1.id, 403)
+            testBuilder.userC.groupJoinInvites.assertListFailStatus(group1.id, 403)
 
-            //cannot list another group's invites
-            assertEquals(0, testBuilder.admin.groupJoinInvites.list(group1.id).size)
+            assertEquals(1, testBuilder.userB.groupJoinInvites.listUserInvites().size)
+            assertEquals(1, testBuilder.userC.groupJoinInvites.listUserInvites().size)
         }
     }
 

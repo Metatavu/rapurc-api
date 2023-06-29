@@ -40,6 +40,10 @@ class GroupJoinInviteTestBuilderResource(
         return api.findGroupJoinInvite(groupId, joinRequestId)
     }
 
+    fun listUserInvites(): Array<GroupJoinInvite> {
+        return api.listUserGroupJoinInvites()
+    }
+
     fun list(groupId: UUID): Array<GroupJoinInvite> {
         return api.listGroupJoinInvites(groupId)
     }

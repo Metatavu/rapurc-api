@@ -38,7 +38,7 @@ class GroupJoinController {
      * @return list of group join requests
      */
     fun listGroupJoins(
-        groupId: UUID,
+        groupId: UUID? = null,
         type: JoinRequestType? = null,
         email: String? = null,
         status: JoinRequestStatus? = null
