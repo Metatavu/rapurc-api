@@ -1,1 +1,1 @@
-Purkukartoitus.fi - Uusi liittymiskutsu ryhmääsi {groupName}
+Purkukartoitus.fi - Sinut on kutsuttu ryhmään {groupName}
