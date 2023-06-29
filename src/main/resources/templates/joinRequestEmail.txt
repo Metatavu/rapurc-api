@@ -1,0 +1,2 @@
+<p>Käyttäjä {userFullName} on pyytänyt lupaa riittyä ryhmääsi {groupName}.</p>
+<p>Voit hyväksyä tai hylätä kutsun ryhmänhallinnasta kutsut -välilehdeltä.</p>

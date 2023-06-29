@@ -1,0 +1,2 @@
+<p>Organisaatiosi {groupName} on kutsunut sinut purkukartoitussovelluksen käyttäjäksi.</p>
+<p>Rekisteröidy osoitteessa <a href="https://purkukartoitus.fi/">purkukartoitus.fi</a>. Kutsun hyväksymisen jälkeen Sinulla on oikeus luoda ja muokata organisaatiosi purkukartoituksia.</p>

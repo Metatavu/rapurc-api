@@ -1,0 +1,1 @@
+<p>Käyttäjä {invitedUserFullName} on hyväksynyt kutsusi liittyä ryhmään {groupName}.</p>

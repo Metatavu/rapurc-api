@@ -4,6 +4,7 @@ import fi.metatavu.rapurc.api.client.models.GroupJoinInvite
 import fi.metatavu.rapurc.api.client.models.JoinRequestStatus
 import fi.metatavu.rapurc.api.client.models.SurveyStatus
 import fi.metatavu.rapurc.api.client.models.UserGroup
+import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
 import fi.metatavu.rapurc.api.test.functional.resources.KeycloakTestResource
 import fi.metatavu.rapurc.api.test.functional.resources.MailgunMocker
@@ -56,11 +57,13 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertNotNull(createdInvite.metadata?.creatorId)
             assertNotNull(createdInvite.metadata?.createdAt)
 
+            val subjectExpected = Templates.userInviteEmailSubject("group 1").render()
+            val bodyExpected = Templates.userInviteEmail("group 1").render()
             mailgunMocker.verifyTextMessageSent(
                 fromEmail = userAEmail,
                 to = userBEmail,
-                subject = "You were invited to join group group 1",
-                content = "You were invited to join group group 1. Please log in to the system to accept or reject the invitation."
+                subject = subjectExpected,
+                content = bodyExpected
             )
 
             testBuilder.userA.groupJoinInvites.create(group1.id, createdInvite.copy(email = "notregisteredemail@exmaple.com"))
@@ -71,6 +74,14 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
 
             val randomId = UUID.randomUUID()
             testBuilder.userA.groupJoinInvites.assertCreateFailStatus(randomId, createdInvite.copy(groupId = randomId), 404)
+
+            testBuilder.userA.groupJoinInvites.resendEmail(group1.id, createdInvite.id!!)
+            mailgunMocker.verifyTextMessageSent(
+                fromEmail = userAEmail,
+                to = userBEmail,
+                subject = subjectExpected,
+                content = bodyExpected
+            )
 
         }
     }
@@ -183,14 +194,14 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             mailgunMocker.verifyTextMessageSent(
                 fromEmail = userAEmail,
                 to = userBEmail,
-                subject = "You were invited to join group group 1",
-                content = "You were invited to join group group 1. Please log in to the system to accept or reject the invitation."
+                subject = Templates.userInviteEmailSubject("group 1").render(),
+                content = Templates.userInviteEmail("group 1").render()
             )
             mailgunMocker.verifyTextMessageSent(
                 fromEmail = userBEmail,
                 to = userAEmail,
-                subject = "Your group join invitation was updated",
-                content = "User user_b has updated your invitation to join group group 1 to accepted"
+                subject = Templates.userInviteAcceptedEmailSubject("user_b", "group 1").render(),
+                content = Templates.userInviteAcceptedEmail("user_b", "group 1").render()
             )
         }
     }

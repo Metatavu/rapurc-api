@@ -4,6 +4,7 @@ import fi.metatavu.rapurc.api.client.models.GroupJoinRequest
 import fi.metatavu.rapurc.api.client.models.JoinRequestStatus
 import fi.metatavu.rapurc.api.client.models.SurveyStatus
 import fi.metatavu.rapurc.api.client.models.UserGroup
+import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
 import fi.metatavu.rapurc.api.test.functional.resources.KeycloakTestResource
 import fi.metatavu.rapurc.api.test.functional.resources.MysqlTestResource
@@ -37,11 +38,13 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 )
             )
 
+            val joinSubjectExpected = Templates.joinRequestEmailSubject("first name last name", "group 2").render()
+            val joinBodyExpected = Templates.joinRequestEmail("first name last name", "group 2").render()
             wireMock.verifyTextMessageSent(
                 fromEmail = "usera@example.com",
                 to = "userb@example.com",
-                subject = "User first name last name has requested to join group group 2",
-                content = "User first name last name has requested to join group group 2. Please log in to the system to accept or reject the request."
+                subject = joinSubjectExpected,
+                content = joinBodyExpected
             )
             try {
                 Assertions.assertNotNull(createdRequest.id)
@@ -151,11 +154,13 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                     groupId = group2.id
                 )
             )
+            val joinSubjectExpected = Templates.joinRequestEmailSubject("first name last name", "group 2").render()
+            val joinBodyExpected = Templates.joinRequestEmail("first name last name", "group 2").render()
             wireMock.verifyTextMessageSent(
                 fromEmail = "usera@example.com",
                 to = "userb@example.com",
-                subject = "User first name last name has requested to join group group 2",
-                content = "User first name last name has requested to join group group 2. Please log in to the system to accept or reject the request."
+                subject = joinSubjectExpected,
+                content = joinBodyExpected
             )
             try {
                 // before A could see 1 survey (own)
@@ -164,11 +169,14 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 Assertions.assertEquals(JoinRequestStatus.aCCEPTED, accepted.status)
                 // now A has access to 2 B's surveys
                 Assertions.assertEquals(3, testBuilder.userA.surveys.listSurveys().size)
+
+                val joinSubjectUpdateExpected = Templates.joinRequestAcceptedEmailSubject("group 2").render()
+                val joinBodyUpdateExpected = Templates.joinRequestAcceptedEmail("group 2").render()
                 wireMock.verifyTextMessageSent(
                     fromEmail = "userb@example.com",
                     to = "usera@example.com",
-                    subject = "Your group join request was updated",
-                    content = "Your request to join group 2 group has been updated to accepted"
+                    subject = joinSubjectUpdateExpected,
+                    content = joinBodyUpdateExpected
                 )
 
                 // user a cannot update user b's group join requests

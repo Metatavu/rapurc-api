@@ -1,0 +1,1 @@
+<p>Pyyntösi liittyä ryhmään {groupName} on hylätty.</p>

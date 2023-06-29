@@ -32,6 +32,10 @@ class GroupJoinInviteTestBuilderResource(
         return addClosable(api.createGroupJoinInvite(groupId, request))
     }
 
+    fun resendEmail(groupId: UUID, joinRequestId: UUID) {
+        api.sendGroupJoinInviteEmail(groupId, joinRequestId)
+    }
+
     fun find(groupId: UUID, joinRequestId: UUID): GroupJoinInvite {
         return api.findGroupJoinInvite(groupId, joinRequestId)
     }
