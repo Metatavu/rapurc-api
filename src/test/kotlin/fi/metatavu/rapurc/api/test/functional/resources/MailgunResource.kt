@@ -17,6 +17,7 @@ class MailgunResource : QuarkusTestResourceLifecycleManager {
     private val domain = ApiTestSettings.mailgunDomain
     private val path = ApiTestSettings.mailgunApiUrlEnding
     private val key = ApiTestSettings.mailgunApiKey
+    private val sender = ApiTestSettings.mailgunSenderEmail
 
     override fun start(): Map<String, String> {
         val config: MutableMap<String, String> = HashMap()
@@ -26,6 +27,7 @@ class MailgunResource : QuarkusTestResourceLifecycleManager {
         config["rapurc.mailgun.apiurl"] = wireMockServer.baseUrl() + '/' + path
         config["rapurc.mailgun.domain"] = domain
         config["rapurc.mailgun.apikey"] = key
+        config["rapurc.mailgun.sender.email"] = sender
         return config
     }
 

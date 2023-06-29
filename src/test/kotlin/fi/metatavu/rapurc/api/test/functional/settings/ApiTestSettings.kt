@@ -17,9 +17,10 @@ class ApiTestSettings {
     companion object {
         // Mailgun settings
 
-        val mailgunDomain = "example.com"
-        val mailgunApiKey = "apiKey"
-        val mailgunApiUrlEnding = "mgapi"
+        const val mailgunDomain = "example.com"
+        const val mailgunApiKey = "apiKey"
+        const val mailgunApiUrlEnding = "mgapi"
+        const val mailgunSenderEmail = "noreply@example.com"
     }
 
 }

@@ -229,7 +229,6 @@ class GroupJoinController {
     fun informUser(userEmail: String, admin: UserRepresentation, subject: String, body: String) {
         emailController.sendEmail(
             to = userEmail,
-            from = admin.email,
             subject = subject,
             content = body
         )
@@ -246,7 +245,6 @@ class GroupJoinController {
     private fun informGroupAdmin(admin: UserRepresentation, user: UserRepresentation, subject: String, body: String) {
         emailController.sendEmail(
             to = admin.email,
-            from = user.email,
             subject = subject,
             content = body
         )

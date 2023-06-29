@@ -20,9 +20,14 @@ class EmailController {
     @Inject
     @ConfigProperty(name = "rapurc.mailgun.domain")
     lateinit var domain: String
+
     @Inject
     @ConfigProperty(name = "rapurc.mailgun.apiurl")
     lateinit var mailgunUrl: String
+
+    @Inject
+    @ConfigProperty(name = "rapurc.mailgun.sender.email")
+    lateinit var senderEmail: String
 
     @Inject
     lateinit var vertx: io.vertx.core.Vertx
@@ -34,7 +39,7 @@ class EmailController {
      * @param subject email subject
      * @param content email content
      */
-    fun sendEmail(to: String, from: String, subject: String, content: String) {
+    fun sendEmail(to: String, subject: String, content: String) {
         val client: WebClient = WebClient.create(vertx)
         client.requestAbs(
             HttpMethod.POST,
@@ -45,7 +50,7 @@ class EmailController {
                     .add("to", to)
                     .add("subject", subject)
                     .add("html", content)
-                    .add("from", from)
+                    .add("from", senderEmail)
             )
     }
 }
