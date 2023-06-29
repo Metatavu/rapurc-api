@@ -1554,7 +1554,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             body = Templates.userInviteEmail(group.name).render(),
         )
 
-        return createNoContent()
+        return createAccepted()
     }
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
