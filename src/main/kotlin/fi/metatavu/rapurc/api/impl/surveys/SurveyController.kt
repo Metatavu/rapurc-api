@@ -71,7 +71,7 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        groupIds: List<UUID>
+        groupIds: List<UUID>?
     ): List<Survey> {
         return surveyDAO.list(
             firstResult = firstResult,
@@ -97,24 +97,25 @@ class SurveyController {
      * @param endDate estimated demolition end
      * @param additionalInformation additional information
      * @param creatorDisplayName creator's name
+     * @param groupId group ID
      * @param creatorId creator's ID
      * @return created survey
      */
     fun create(
         status: SurveyStatus,
         type: SurveyType,
-        groupIds: List<UUID>?,
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         additionalInformation: String?,
         creatorDisplayName: String,
+        groupId: UUID,
         creatorId: UUID
     ): Survey {
         return surveyDAO.create(
             id = UUID.randomUUID(),
             status = status,
-            keycloakGroupIds = groupIds?.joinToString(separator = ",", transform = { it.toString() }) ?: "",
+            groupId = groupId,
             type = type,
             dateUnknown = dateUnknown,
             startDate = startDate,

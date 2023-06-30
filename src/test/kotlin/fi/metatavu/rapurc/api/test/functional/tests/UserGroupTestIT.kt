@@ -43,17 +43,17 @@ class UserGroupTestIT {
     @Test
     fun list() {
         TestBuilder().use { testBuilder ->
+            val userAGroupsBeforeAddingNew = testBuilder.userA.userGroups.list(member = true).size
             testBuilder.userA.userGroups.create(UserGroup(name = "group 1"))
             testBuilder.userA.userGroups.create(UserGroup(name = "group 2"))
             testBuilder.userB.userGroups.create(UserGroup(name = "group 3"))
 
             val list = testBuilder.userA.userGroups.list()
             assertEquals(5, list.size)  // 3 created by test, 2 already existing by keycloak
-            val listByAdmin = testBuilder.userA.userGroups.list(adminEmail = "usera@example.com")
+            val listByAdmin = testBuilder.userA.userGroups.list(admin = true)
             assertEquals(2, listByAdmin.size)
-
-            testBuilder.userB.userGroups.assertListFailStatus(403, adminEmail = "usera@example.com")
-            testBuilder.userB.userGroups.assertListFailStatus(404, adminEmail = "randomemail")
+            val listByMember = testBuilder.userA.userGroups.list(member = true)
+            assertEquals(userAGroupsBeforeAddingNew + 2, listByMember.size)
         }
     }
 
@@ -106,7 +106,8 @@ class UserGroupTestIT {
             testBuilder.userB.userGroups.assertDeleteFailStatus(403, created.id!!)
 
             testBuilder.userA.userGroups.delete(created.id)
-            assertEquals(0, testBuilder.userA.userGroups.list("usera@example.com").size)
+            assertEquals(0, testBuilder.userA.userGroups.list(admin = true).size)
+            assertEquals(1, testBuilder.userA.userGroups.list(member = true).size) //only 1 default group is left
         }
     }
 

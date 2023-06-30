@@ -27,7 +27,7 @@ class BuildingTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
 
             it.userB.buildings.assertCreateFailStatus(
                 expectedStatus =  403,
@@ -57,8 +57,8 @@ class BuildingTestIT {
     @Test
     fun list() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyA2 = it.userA.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyA2 = it.userA.surveys.create(it.userA)
             it.userA.buildings.create(
                 surveyId = createdSurveyA1.id!!,
                 buildingSurveyId = createdSurveyA1.id,
@@ -84,8 +84,8 @@ class BuildingTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             val building1 = it.userA.buildings.create(
                 surveyId = createdSurveyA1.id!!,
                 buildingSurveyId = createdSurveyA1.id,
@@ -112,7 +112,7 @@ class BuildingTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
             val building1 = it.userA.buildings.create(
                 surveyId = createdSurveyA1.id!!,
                 buildingSurveyId = createdSurveyA1.id,
@@ -150,8 +150,8 @@ class BuildingTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             val building1 = it.userA.buildings.create(
                 surveyId = createdSurveyA1.id!!,
                 buildingSurveyId = createdSurveyA1.id,

@@ -26,7 +26,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
      *
      * @param id id
      * @param status status
-     * @param keycloakGroupIds serialized list of group ids
+     * @param groupId group id
      * @param type type
      * @param dateUnknown demolition date unknown
      * @param startDate start date
@@ -40,7 +40,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
     fun create(
         id: UUID,
         status: SurveyStatus,
-        keycloakGroupIds: String,
+        groupId: UUID,
         type: SurveyType,
         dateUnknown: Boolean?,
         startDate: LocalDate?,
@@ -53,7 +53,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         val survey = Survey()
         survey.id = id
         survey.status = status
-        survey.keycloakGroupIds = keycloakGroupIds
+        survey.keycloakGroupId = groupId
         survey.type = type
         survey.dateUnknown = dateUnknown
         survey.startDate = startDate
@@ -88,7 +88,7 @@ class SurveyDAO: AbstractDAO<Survey>() {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        groupIds: List<UUID>
+        groupIds: List<UUID>?
     ): List<Survey> {
         val entityManager = getEntityManager()
         val criteriaBuilder = entityManager.criteriaBuilder
@@ -121,12 +121,8 @@ class SurveyDAO: AbstractDAO<Survey>() {
             restrictions.add(criteriaBuilder.lessThanOrEqualTo(root.get(Survey_.endDate), endDate))
         }
 
-        if (groupIds.isNotEmpty()) {
-            val groupRestrictions = ArrayList<Predicate>()
-            groupIds.forEach {
-                groupRestrictions.add(criteriaBuilder.like(root.get(Survey_.keycloakGroupIds), "%$it%"))
-            }
-            restrictions.add(criteriaBuilder.or(*groupRestrictions.toTypedArray()))
+        if (groupIds != null) {
+            restrictions.add(root.get(Survey_.keycloakGroupId).`in`(groupIds))
         }
 
         criteria.select(root)

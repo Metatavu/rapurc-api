@@ -28,7 +28,8 @@ class SurveyorTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val surveyId = it.userA.surveys.create().id!!
+            val useAGroup = it.userA.userGroups.list(member = true).first()
+            val surveyId = it.userA.surveys.create(useAGroup.id!!).id!!
             val createdSurveyor = it.userA.surveyors.createWithDefaultValues(surveyId = surveyId)
             assertNotNull(createdSurveyor)
 
@@ -53,7 +54,9 @@ class SurveyorTestIT {
     @Test
     fun list() {
         TestBuilder().use {
-            val surveyId = it.userA.surveys.create().id!!
+            val useAGroup = it.userA.userGroups.list(member = true).first()
+
+            val surveyId = it.userA.surveys.create(useAGroup.id!!).id!!
 
             val emptyList = it.admin.surveyors.list(surveyId = surveyId)
             assertEquals(0, emptyList.size)
@@ -74,7 +77,9 @@ class SurveyorTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val surveyId = it.userA.surveys.create().id!!
+            val useAGroup = it.userA.userGroups.list(member = true).first()
+
+            val surveyId = it.userA.surveys.create(useAGroup.id!!).id!!
 
             val surveyor = it.userA.surveyors.createWithDefaultValues(surveyId = surveyId)
             val foundSurveyor = it.userA.surveyors.findSurveyor(surveyId = surveyId, surveyorId = surveyor!!.id!!)
@@ -97,7 +102,9 @@ class SurveyorTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val surveyId = it.userA.surveys.create().id!!
+            val useAGroup = it.userA.userGroups.list(member = true).first()
+
+            val surveyId = it.userA.surveys.create(useAGroup.id!!).id!!
             val surveyor = it.userA.surveyors.createWithDefaultValues(surveyId = surveyId)
             val updateData = surveyor?.copy(
                 firstName = "Updated first name",
@@ -134,8 +141,11 @@ class SurveyorTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val surveyId = it.userA.surveys.create().id!!
-            val anotherSurveyId = it.userB.surveys.create().id!!
+            val useAGroup = it.userA.userGroups.list(member = true).first()
+            val useBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyId = it.userA.surveys.create(useAGroup.id!!).id!!
+            val anotherSurveyId = it.userB.surveys.create(useBGroup.id!!).id!!
 
             val emptyList = it.admin.surveyors.list(surveyId = surveyId)
             assertEquals(0, emptyList.size)

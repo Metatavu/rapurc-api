@@ -224,13 +224,13 @@ class KeycloakController {
      * @param userId user id
      * @return user group id list if belongs to any
      */
-    fun getUserGroups(userId: UUID): List<UUID> {
-        val groups = realm().users().get(userId.toString())?.groups() ?: return emptyList()
-        if (groups.size >= 1) {
-            return groups.map { UUID.fromString(it.id) }
+    fun getUserGroups(userId: UUID): List<GroupRepresentation> {
+        return try {
+            realm().users().get(userId.toString())?.groups() ?: emptyList()
+        } catch (e: Exception) {
+            logger.error("Failed to get user groups", e)
+            emptyList()
         }
-
-        return emptyList()
     }
 
     /**
