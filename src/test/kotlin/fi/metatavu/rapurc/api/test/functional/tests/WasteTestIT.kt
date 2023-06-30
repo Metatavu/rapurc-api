@@ -28,8 +28,12 @@ class WasteTestIT {
     fun create() {
         TestBuilder().use {
             val usage = it.admin.usages.create()
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyA = it.userA.surveys.create(userAGroup.id!!)
+            val surveyB = it.userB.surveys.create(userBGroup.id!!)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val wasteMaterial = it.admin.wasteMaterials.create(wasteCategoryId = wasteCategory.id!!)
 
@@ -64,8 +68,12 @@ class WasteTestIT {
     fun list() {
         TestBuilder().use {
             val usage = it.admin.usages.create()
-            val surveyA1 = it.userA.surveys.create()
-            val surveyA2 = it.userA.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyA1 = it.userA.surveys.create(userAGroup.id!!)
+            val surveyA2 = it.userA.surveys.create(userAGroup.id!!)
+
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val wasteMaterial = it.admin.wasteMaterials.create(wasteCategoryId = wasteCategory.id!!)
 
@@ -94,8 +102,11 @@ class WasteTestIT {
     fun find() {
         TestBuilder().use {
             val usage = it.admin.usages.create()
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyA = it.userA.surveys.create(userAGroup.id!!)
+            val surveyB = it.userB.surveys.create(userBGroup.id!!)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val wasteMaterial = it.admin.wasteMaterials.create(wasteCategoryId = wasteCategory.id!!)
 
@@ -126,8 +137,11 @@ class WasteTestIT {
     fun update() {
         TestBuilder().use {
             val usage = it.admin.usages.create()
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyA = it.userA.surveys.create(userAGroup.id!!)
+            val surveyB = it.userB.surveys.create(userBGroup.id!!)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val wasteMaterial = it.admin.wasteMaterials.create(wasteCategoryId = wasteCategory.id!!)
 
@@ -165,8 +179,11 @@ class WasteTestIT {
     fun delete() {
         TestBuilder().use {
             val usage = it.admin.usages.create()
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val surveyA = it.userA.surveys.create(userAGroup.id!!)
+            val surveyB = it.userB.surveys.create(userBGroup.id!!)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val wasteMaterial = it.admin.wasteMaterials.create(wasteCategoryId = wasteCategory.id!!)
 

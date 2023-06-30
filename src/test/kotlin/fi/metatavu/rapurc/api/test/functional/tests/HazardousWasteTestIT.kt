@@ -28,8 +28,8 @@ class HazardousWasteTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val surveyA = it.userA.surveys.create(it.userA)
+            val surveyB = it.userB.surveys.create(it.userB)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val hazardousMaterial = it.admin.hazMaterials.create(wasteCategoryId = wasteCategory.id!!)
             val wastespecifier = it.admin.wasteSpecifiers.create()
@@ -78,8 +78,8 @@ class HazardousWasteTestIT {
     @Test
     fun list() {
         TestBuilder().use {
-            val surveyA1 = it.userA.surveys.create()
-            val surveyA2 = it.userA.surveys.create()
+            val surveyA1 = it.userA.surveys.create(it.userA)
+            val surveyA2 = it.userA.surveys.create(it.userA)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val hazardousMaterial = it.admin.hazMaterials.create(wasteCategoryId = wasteCategory.id!!)
             val wasteSpecifier = it.admin.wasteSpecifiers.create()
@@ -115,8 +115,8 @@ class HazardousWasteTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val surveyA = it.userA.surveys.create(it.userA)
+            val surveyB = it.userB.surveys.create(it.userB)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val hazardousMaterial = it.admin.hazMaterials.create(wasteCategoryId = wasteCategory.id!!)
             val wasteSpecifier = it.admin.wasteSpecifiers.create()
@@ -147,8 +147,8 @@ class HazardousWasteTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val surveyA = it.userA.surveys.create(it.userA)
+            val surveyB = it.userB.surveys.create(it.userB)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val hazardousMaterial = it.admin.hazMaterials.create(wasteCategoryId = wasteCategory.id!!)
             val wasteSpecifier = it.admin.wasteSpecifiers.create()
@@ -187,8 +187,8 @@ class HazardousWasteTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val surveyA = it.userA.surveys.create()
-            val surveyB = it.userB.surveys.create()
+            val surveyA = it.userA.surveys.create(it.userA)
+            val surveyB = it.userB.surveys.create(it.userB)
             val wasteCategory = it.admin.wasteCategories.createDefault()
             val hazardousMaterial = it.admin.hazMaterials.create(wasteCategoryId = wasteCategory.id!!)
             val wasteSpecifier = it.admin.wasteSpecifiers.create()

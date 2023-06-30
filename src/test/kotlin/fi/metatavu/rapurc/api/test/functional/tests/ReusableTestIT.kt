@@ -39,8 +39,11 @@ class ReusableTestIT {
     @Test
     fun create() {
         TestBuilder().use { testBuilder ->
-            val survey1 = testBuilder.userA.surveys.create(SurveyStatus.dRAFT)
-            val survey2 = testBuilder.userB.surveys.create(SurveyStatus.dRAFT)
+            val userAGroup = testBuilder.userA.userGroups.list(member = true).first()
+            val userBGroup = testBuilder.userB.userGroups.list(member = true).first()
+
+            val survey1 = testBuilder.userA.surveys.create(userAGroup.id!!, SurveyStatus.dRAFT)
+            val survey2 = testBuilder.userB.surveys.create(userBGroup.id!!, SurveyStatus.dRAFT)
 
             val material = testBuilder.admin.materials.createDefault()
 
@@ -64,8 +67,11 @@ class ReusableTestIT {
     @Test
     fun list() {
         TestBuilder().use { testBuilder ->
-            val survey1 = testBuilder.userA.surveys.create(SurveyStatus.dRAFT)
-            val survey2 = testBuilder.userB.surveys.create(SurveyStatus.dRAFT)
+            val userAGroup = testBuilder.userA.userGroups.list(member = true).first()
+            val userBGroup = testBuilder.userB.userGroups.list(member = true).first()
+
+            val survey1 = testBuilder.userA.surveys.create(userAGroup.id!!, SurveyStatus.dRAFT)
+            val survey2 = testBuilder.userB.surveys.create(userBGroup.id!!, SurveyStatus.dRAFT)
 
             val material = testBuilder.admin.materials.createDefault()
             testBuilder.userA.reusables.create(survey1.id!!, reusable.copy(reusableMaterialId = material.id!!))
@@ -87,8 +93,11 @@ class ReusableTestIT {
     @Test
     fun find() {
         TestBuilder().use { testBuilder ->
-            val survey1 = testBuilder.userA.surveys.create(SurveyStatus.dRAFT)
-            val survey2 = testBuilder.userB.surveys.create(SurveyStatus.dRAFT)
+            val userAGroup = testBuilder.userA.userGroups.list(member = true).first()
+            val userBGroup = testBuilder.userB.userGroups.list(member = true).first()
+
+            val survey1 = testBuilder.userA.surveys.create(userAGroup.id!!, SurveyStatus.dRAFT)
+            val survey2 = testBuilder.userB.surveys.create(userBGroup.id!!, SurveyStatus.dRAFT)
 
             val material = testBuilder.admin.materials.createDefault()
 
@@ -114,8 +123,11 @@ class ReusableTestIT {
     @Test
     fun update() {
         TestBuilder().use { testBuilder ->
-            val survey1 = testBuilder.userA.surveys.create(SurveyStatus.dRAFT)
-            val survey2 = testBuilder.userB.surveys.create(SurveyStatus.dRAFT)
+            val userAGroup = testBuilder.userA.userGroups.list(member = true).first()
+            val userBGroup = testBuilder.userB.userGroups.list(member = true).first()
+
+            val survey1 = testBuilder.userA.surveys.create(userAGroup.id!!, SurveyStatus.dRAFT)
+            val survey2 = testBuilder.userB.surveys.create(userBGroup.id!!, SurveyStatus.dRAFT)
 
             val material = testBuilder.admin.materials.createDefault()
 
@@ -152,8 +164,11 @@ class ReusableTestIT {
     @Test
     fun delete() {
         TestBuilder().use { testBuilder ->
-            val survey1 = testBuilder.userA.surveys.create(SurveyStatus.dRAFT)
-            val survey2 = testBuilder.userB.surveys.create(SurveyStatus.dRAFT)
+            val userAGroup = testBuilder.userA.userGroups.list(member = true).first()
+            val userBGroup = testBuilder.userB.userGroups.list(member = true).first()
+
+            val survey1 = testBuilder.userA.surveys.create(userAGroup.id!!, SurveyStatus.dRAFT)
+            val survey2 = testBuilder.userB.surveys.create(userBGroup.id!!, SurveyStatus.dRAFT)
 
             val material = testBuilder.admin.materials.createDefault()
 

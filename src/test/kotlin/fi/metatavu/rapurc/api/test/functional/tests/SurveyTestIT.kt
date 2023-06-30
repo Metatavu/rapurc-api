@@ -34,11 +34,17 @@ class SurveyTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val createdSurvey = it.userA.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val createdSurvey = it.userA.surveys.create(userAGroup.id!!)
             assertNotNull(createdSurvey)
+            assertEquals(userAGroup.id, createdSurvey.groupId)
             assertEquals("first name last name", createdSurvey.creatorDisplayName)
 
-            it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT)
+            it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT, userAGroup.id)
+            it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT, UUID.randomUUID())
+            it.admin.surveys.assertCreateFailStatus(403, SurveyStatus.dRAFT, userBGroup.id!!)
         }
     }
 
@@ -61,6 +67,9 @@ class SurveyTestIT {
 
             assertEquals(0, emptyList.size)
 
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
             it.userA.surveys.create(
                 Survey(
                     status = SurveyStatus.dRAFT,
@@ -68,6 +77,7 @@ class SurveyTestIT {
                     startDate = LocalDate.of(2021, 1, 10).toString(),
                     endDate = LocalDate.of(2021, 5, 1).toString(),
                     type = SurveyType.dEMOLITION,
+                    groupId = userAGroup.id!!,
                     metadata = Metadata()
                 )
             )
@@ -78,6 +88,7 @@ class SurveyTestIT {
                     dateUnknown = false,
                     startDate = LocalDate.of(2020, 1, 1).toString(),
                     endDate = LocalDate.of(2020, 12, 1).toString(),
+                    groupId = userAGroup.id,
                     metadata = Metadata()
                 )
             )
@@ -85,6 +96,7 @@ class SurveyTestIT {
                 Survey(
                     status = SurveyStatus.dRAFT,
                     type = SurveyType.pARTIALDEMOLITION,
+                    groupId = userBGroup.id!!,
                     metadata = Metadata()
                 )
             )
@@ -196,7 +208,9 @@ class SurveyTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val survey = it.userA.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+
+            val survey = it.userA.surveys.create(userAGroup.id!!)
             val foundSurvey = it.userA.surveys.findSurvey(surveyId = survey.id!!)
 
             assertEquals(survey.id, foundSurvey.id)
@@ -213,7 +227,9 @@ class SurveyTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val survey = it.userA.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+
+            val survey = it.userA.surveys.create(userAGroup.id!!)
             val updateData = survey.copy(status = SurveyStatus.dONE, additionalInformation = "test")
 
             var updatedSurvey = it.userA.surveys.updateSurvey(body = updateData)
@@ -257,8 +273,11 @@ class SurveyTestIT {
 
             assertEquals(0, emptyList.size)
 
-            val survey = it.userA.surveys.create()
-            val anotherSurvey = it.userB.surveys.create()
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val survey = it.userA.surveys.create(userAGroup.id!!)
+            val anotherSurvey = it.userB.surveys.create(userBGroup.id!!)
 
             val listWithTwoItems = it.admin.surveys.listSurveys(
                 firstResult = null,

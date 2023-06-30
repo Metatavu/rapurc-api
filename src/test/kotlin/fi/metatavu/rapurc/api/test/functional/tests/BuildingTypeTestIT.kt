@@ -105,7 +105,7 @@ class BuildingTypeTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
             val buildingType = it.admin.buildingTypes.create()
             val building1 = it.userA.buildings.create(
                 surveyId = createdSurveyA1.id!!,

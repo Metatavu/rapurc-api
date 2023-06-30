@@ -143,9 +143,9 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
         TestBuilder().use { testBuilder ->
             val group1 = testBuilder.userA.userGroups.create(UserGroup(name = "group 1"))
             val group2 = testBuilder.userB.userGroups.create(UserGroup(name = "group 2"))
-            testBuilder.userB.surveys.create(SurveyStatus.dONE)
-            testBuilder.userB.surveys.create(SurveyStatus.dONE)
-            testBuilder.userA.surveys.create(SurveyStatus.dONE)
+            testBuilder.userB.surveys.create(group2.id!!, SurveyStatus.dONE)
+            testBuilder.userB.surveys.create(group2.id!!, SurveyStatus.dONE)
+            testBuilder.userA.surveys.create(group1.id!!, SurveyStatus.dONE)
             val wireMock = getMailgunMocker()
 
             // A asks to join B's group
@@ -165,11 +165,13 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
             )
             try {
                 // before A could see 1 survey (own)
+                val userAGroupsBeforeJoin = testBuilder.userA.userGroups.list(member = true)
                 Assertions.assertEquals(1, testBuilder.userA.surveys.listSurveys().size)
                 val accepted = testBuilder.userB.groupJoinRequests.update(group2.id, joinGroup2Request.id!!, joinGroup2Request.copy(status = JoinRequestStatus.aCCEPTED))
                 Assertions.assertEquals(JoinRequestStatus.aCCEPTED, accepted.status)
-                // now A has access to 2 B's surveys
+                // now A has access to 2 B's surveys and belongs to its group
                 Assertions.assertEquals(3, testBuilder.userA.surveys.listSurveys().size)
+                Assertions.assertEquals(userAGroupsBeforeJoin.size + 1, testBuilder.userA.userGroups.list(member = true))
 
                 val joinSubjectUpdateExpected = Templates.joinRequestAcceptedEmailSubject("group 2").render()
                 val joinBodyUpdateExpected = Templates.joinRequestAcceptedEmail("group 2").render()

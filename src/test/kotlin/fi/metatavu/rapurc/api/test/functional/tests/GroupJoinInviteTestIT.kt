@@ -168,9 +168,6 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
     fun update() {
         TestBuilder().use { testBuilder ->
             val group1 = testBuilder.userA.userGroups.create(UserGroup(name = "group 1"))
-            val group2 = testBuilder.userB.userGroups.create(UserGroup(name = "group 2"))
-            val group3 = testBuilder.userC.userGroups.create(UserGroup(name = "group 3"))
-
             val mailgunMocker = getMailgunMocker()
 
             // user a invites user b to join its group
@@ -182,13 +179,15 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
                 )
             )
 
-            val goroup1Survey = testBuilder.userA.surveys.create(SurveyStatus.dONE)
+            val goroup1Survey = testBuilder.userA.surveys.create(group1.id, SurveyStatus.dONE)
             testBuilder.userB.surveys.assertFindFailStatus(403, goroup1Survey.id!!)
 
             // user b accepts the invite
+            val userBGroupsBeforeInvite = testBuilder.userB.userGroups.list(member = true).size
             testBuilder.userB.groupJoinInvites.update(group1.id, createdInvite.id!!, createdInvite.copy(status = JoinRequestStatus.aCCEPTED))
 
             //check that user has access to group 1 resouces now but other users still do not
+            assertEquals(userBGroupsBeforeInvite+1, testBuilder.userB.userGroups.list(member = true).size)
             assertNotNull(testBuilder.userB.surveys.findSurvey(goroup1Survey.id))
             testBuilder.userC.surveys.assertFindFailStatus(403, goroup1Survey.id)
 

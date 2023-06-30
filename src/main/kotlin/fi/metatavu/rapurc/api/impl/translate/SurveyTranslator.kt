@@ -25,6 +25,7 @@ class SurveyTranslator: AbstractTranslator<Survey, fi.metatavu.rapurc.api.model.
         result.markedAsDone = entity.markedAsDone
         result.additionalInformation = entity.additionalInformation
         result.creatorDisplayName = entity.creatorDisplayName
+        result.groupId = entity.keycloakGroupId
         result.metadata = metadataTranslator.translate(entity)
         return result
     }

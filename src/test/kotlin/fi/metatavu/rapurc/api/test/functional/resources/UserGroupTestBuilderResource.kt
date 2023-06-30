@@ -48,8 +48,8 @@ class UserGroupTestBuilderResource(
         return api.findUserGroup(userGroupId)
     }
 
-    fun list(adminEmail: String? = null): Array<UserGroup> {
-        return api.listUserGroups(adminEmail = adminEmail)
+    fun list(admin: Boolean? = null, member: Boolean? = null): Array<UserGroup> {
+        return api.listUserGroups(admin = admin, member = member)
     }
 
     fun update(id: UUID, userGroup: UserGroup): UserGroup {
@@ -77,7 +77,7 @@ class UserGroupTestBuilderResource(
     fun assertCount(expected: Int) {
         Assert.assertEquals(
             expected,
-            api.listUserGroups(null).size
+            api.listUserGroups(null, null).size
         )
     }
 
@@ -99,9 +99,9 @@ class UserGroupTestBuilderResource(
         }
     }
 
-    fun assertListFailStatus(expectedStatus: Int, adminEmail: String? = null) {
+    fun assertListFailStatus(expectedStatus: Int) {
         try {
-            api.listUserGroups(adminEmail = adminEmail)
+            api.listUserGroups(null, null)
             fail(String.format("Expected list to fail with status %d", expectedStatus))
         } catch (e: ClientException) {
             Assert.assertEquals(expectedStatus.toLong(), e.statusCode.toLong())

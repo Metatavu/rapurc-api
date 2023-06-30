@@ -26,8 +26,10 @@ class AttachmentTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val survey1Id = it.userA.surveys.create().id!!
-            val survey2Id = it.userB.surveys.create().id!!
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+            val survey1Id = it.userA.surveys.create(userAGroup.id!!).id!!
+            val survey2Id = it.userB.surveys.create(userBGroup.id!!).id!!
 
             it.userA.attachments.assertCreateFailStatus(
                 404,
@@ -53,8 +55,10 @@ class AttachmentTestIT {
     @Test
     fun list() {
         TestBuilder().use {
-            val survey1Id = it.userA.surveys.create().id!!
-            val survey2Id = it.userA.surveys.create().id!!
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val survey1Id = it.userA.surveys.create(userAGroup.id!!).id!!
+            val survey2Id = it.userA.surveys.create(userAGroup.id).id!!
+
             it.userA.attachments.create(survey1Id, it.userA.attachments.attachment)
             it.userA.attachments.create(survey2Id, it.userA.attachments.attachment)
             it.userA.attachments.create(survey2Id, it.userA.attachments.attachment)
@@ -71,8 +75,11 @@ class AttachmentTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val survey1Id = it.userA.surveys.create().id!!
-            val survey2Id = it.userB.surveys.create().id!!
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val survey1Id = it.userA.surveys.create(userAGroup.id!!).id!!
+            val survey2Id = it.userB.surveys.create(userBGroup.id!!).id!!
             val createdAttachment =
                 it.userA.attachments.create(survey1Id, it.userA.attachments.attachment)
 
@@ -96,8 +103,11 @@ class AttachmentTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val survey1Id = it.userA.surveys.create().id!!
-            val survey2Id = it.userB.surveys.create().id!!
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val survey1Id = it.userA.surveys.create(userAGroup.id!!).id!!
+            val survey2Id = it.userB.surveys.create(userBGroup.id!!).id!!
 
             val attachment = it.userA.attachments.create(survey1Id, it.userA.attachments.attachment)
             val updateData = attachment.copy(
@@ -134,8 +144,11 @@ class AttachmentTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val survey1Id = it.userA.surveys.create().id!!
-            val survey2Id = it.userB.surveys.create().id!!
+            val userAGroup = it.userA.userGroups.list(member = true).first()
+            val userBGroup = it.userB.userGroups.list(member = true).first()
+
+            val survey1Id = it.userA.surveys.create(userAGroup.id!!).id!!
+            val survey2Id = it.userB.surveys.create(userBGroup.id!!).id!!
 
             val attachment = it.userA.attachments.create(survey1Id, it.userA.attachments.attachment)
 

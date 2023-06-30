@@ -9,6 +9,7 @@ import fi.metatavu.rapurc.api.client.models.Survey
 import fi.metatavu.rapurc.api.client.models.SurveyStatus
 import fi.metatavu.rapurc.api.client.models.SurveyType
 import fi.metatavu.rapurc.api.test.functional.TestBuilder
+import fi.metatavu.rapurc.api.test.functional.auth.TestBuilderAuthentication
 import fi.metatavu.rapurc.api.test.functional.impl.ApiTestBuilderResource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -37,10 +38,29 @@ class SurveyTestBuilderResource(
      * @param status survey status
      * @return created survey
      */
-    fun create(status: SurveyStatus = SurveyStatus.dRAFT): Survey {
-        val survey = Survey(status = status, type = SurveyType.rENOVATION, metadata = Metadata())
+    fun create(groupId: UUID, status: SurveyStatus = SurveyStatus.dRAFT): Survey {
+        val survey = Survey(status = status, type = SurveyType.rENOVATION, groupId = groupId, metadata = Metadata())
         val result = api.createSurvey(survey)
         return addClosable(result)
+    }
+
+    /**
+     * Creates survey for user's group
+     *
+     * @param user user creating the survey
+     * @return created survey
+     */
+    fun create(user: TestBuilderAuthentication): Survey {
+        return addClosable(
+            api.createSurvey(
+                Survey(
+                    status = SurveyStatus.dRAFT,
+                    type = SurveyType.rENOVATION,
+                    groupId = user.userGroups.list(member = true).first().id!!,
+                    metadata = Metadata()
+                )
+            )
+        )
     }
 
     /**
@@ -183,9 +203,9 @@ class SurveyTestBuilderResource(
      * @param expectedStatus expected status code
      * @param status status
      */
-    fun assertCreateFailStatus(expectedStatus: Int, status: SurveyStatus) {
+    fun assertCreateFailStatus(expectedStatus: Int, status: SurveyStatus, groupId: UUID) {
         try {
-            create(status = status)
+            create(status = status, groupId = groupId)
             fail(String.format("Expected create to fail with status %d", expectedStatus))
         } catch (e: ClientException) {
             assertEquals(expectedStatus.toLong(), e.statusCode.toLong())
