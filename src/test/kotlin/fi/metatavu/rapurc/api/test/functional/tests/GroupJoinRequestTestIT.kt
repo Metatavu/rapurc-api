@@ -171,7 +171,7 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 Assertions.assertEquals(JoinRequestStatus.aCCEPTED, accepted.status)
                 // now A has access to 2 B's surveys and belongs to its group
                 Assertions.assertEquals(3, testBuilder.userA.surveys.listSurveys().size)
-                Assertions.assertEquals(userAGroupsBeforeJoin.size + 1, testBuilder.userA.userGroups.list(member = true))
+                Assertions.assertEquals(userAGroupsBeforeJoin.size + 1, testBuilder.userA.userGroups.list(member = true).size)
 
                 val joinSubjectUpdateExpected = Templates.joinRequestAcceptedEmailSubject("group 2").render()
                 val joinBodyUpdateExpected = Templates.joinRequestAcceptedEmail("group 2").render()
