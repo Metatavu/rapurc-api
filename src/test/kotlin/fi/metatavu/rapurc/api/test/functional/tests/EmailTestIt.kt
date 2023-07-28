@@ -38,7 +38,7 @@ class EmailTestIt : AbstractTestIT() {
             val emailTemplate = EmailTemplate(
                 emailType = EmailType.bUILDINGDEMOLITIONCONTACTUPDATE,
                 emailAddress = "usera@example.com",
-                emailData = BuildingDemolitionEmailTemplate(
+                emailData = BuildingDemolitionContactUpdateTemplate(
                     buildingId = building!!.id!!,
                 )
             )
@@ -72,7 +72,7 @@ class EmailTestIt : AbstractTestIT() {
             it.admin.emails.assertSendSurveyEmailFailStatus(
                 400,
                 surveyId = createdSurveyA.id,
-                emailTemplate = emailTemplate.copy(emailData = BuildingDemolitionEmailTemplate(buildingId = UUID.randomUUID()))
+                emailTemplate = emailTemplate.copy(emailData = BuildingDemolitionContactUpdateTemplate(buildingId = UUID.randomUUID()))
             )
         }
     }
@@ -91,7 +91,7 @@ class EmailTestIt : AbstractTestIT() {
             val emailTemplate = EmailTemplate(
                 emailType = EmailType.bUILDINGDEMOLITIONCONTACTUPDATE,
                 emailAddress = "userc@example.com",
-                emailData = BuildingDemolitionEmailTemplate(buildingId = building!!.id!!)
+                emailData = BuildingDemolitionContactUpdateTemplate(buildingId = building!!.id!!)
             )
 
             val informEmailSubject = Templates.buildingDemolitionContactUpdateSubject(building.propertyName!!).render()

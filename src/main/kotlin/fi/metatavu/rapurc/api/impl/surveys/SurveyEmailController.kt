@@ -5,7 +5,7 @@ import fi.metatavu.rapurc.api.impl.buildings.BuildingController
 import fi.metatavu.rapurc.api.impl.email.EmailController
 import fi.metatavu.rapurc.api.impl.email.Templates
 import fi.metatavu.rapurc.api.impl.groups.GroupJoinController
-import fi.metatavu.rapurc.api.model.BuildingDemolitionEmailTemplate
+import fi.metatavu.rapurc.api.model.BuildingDemolitionContactUpdateTemplate
 import fi.metatavu.rapurc.api.model.EmailType
 import fi.metatavu.rapurc.api.persistence.model.Survey
 import org.eclipse.microprofile.config.inject.ConfigProperty
@@ -57,7 +57,7 @@ class SurveyEmailController {
         when (emailType) {
             EmailType.BUILDING_DEMOLITION_CONTACT_UPDATE -> {
                 if (emailData == null) return "Email data must not be null"
-                val data = DataMapperUtils.getData<BuildingDemolitionEmailTemplate>(emailData)
+                val data = DataMapperUtils.getData<BuildingDemolitionContactUpdateTemplate>(emailData)
                 val building = buildingController.find(data.buildingId) ?: return "Building not found"
                 if (building.survey?.id != survey.id) return "Building not found"
                 emailController.sendEmail(
