@@ -45,4 +45,10 @@ object Templates {
     @JvmStatic
     external fun userInviteRejectedEmailSubject(invitedUserFullName: String, groupName: String): TemplateInstance
 
+    @JvmStatic
+    external fun buildingDemolitionContactUpdateSubject(propertyName: String): TemplateInstance
+
+    @JvmStatic
+    external fun buildingDemolitionContactUpdateBody(link: String): TemplateInstance
+
 }

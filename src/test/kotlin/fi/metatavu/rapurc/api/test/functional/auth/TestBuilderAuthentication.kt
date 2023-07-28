@@ -38,6 +38,7 @@ class TestBuilderAuthentication(
     val userGroups: UserGroupTestBuilderResource = UserGroupTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
     val groupJoinRequests: GroupJoinRequestTestBuilderResource = GroupJoinRequestTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
     val groupJoinInvites: GroupJoinInviteTestBuilderResource = GroupJoinInviteTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
+    val emails: EmailTestBuilderResource = EmailTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
 
     /**
      * Creates a API client
