@@ -13,6 +13,7 @@ import fi.metatavu.rapurc.api.impl.owners.OwnerInformationController
 import fi.metatavu.rapurc.api.impl.surveyors.SurveyorController
 import fi.metatavu.rapurc.api.impl.surveys.AttachmentController
 import fi.metatavu.rapurc.api.impl.surveys.SurveyController
+import fi.metatavu.rapurc.api.impl.surveys.SurveyEmailController
 import fi.metatavu.rapurc.api.impl.translate.*
 import fi.metatavu.rapurc.api.impl.waste.*
 import fi.metatavu.rapurc.api.model.*
@@ -142,6 +143,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     @Inject
     lateinit var userTranslator: UserTranslator
+
+    @Inject
+    lateinit var surveyEmailController: SurveyEmailController
 
     /* SURVEYS */
 
@@ -1621,6 +1625,28 @@ class V1ApiImpl : V1Api, AbstractApi() {
         groupJoinController.deleteGroupJoin(request = existingRequest)
 
         return createNoContent()
+    }
+
+    @RolesAllowed(value = [UserRole.USER.name, UserRole.ADMIN.name])
+    override fun sendSurveyEmail(surveyId: UUID, emailTemplate: EmailTemplate): Response {
+        val userId = loggedUserId ?: return createForbidden(NO_LOGGED_USER_ID)
+
+        val foundSurvey = surveyController.find(surveyId = surveyId)
+            ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
+
+        surveyAccessRightsCheck(userId, foundSurvey)?.let { return it }
+        val problems = surveyEmailController.sendSurveyEmail(
+            survey = foundSurvey,
+            emailAddress = emailTemplate.emailAddress,
+            emailType = emailTemplate.emailType,
+            emailData = emailTemplate.emailData,
+            userId = userId
+        )
+        if (!problems.isNullOrEmpty()) {
+            return createBadRequest(problems)
+        }
+
+        return createAccepted(null)
     }
 
     override fun ping(): Response {

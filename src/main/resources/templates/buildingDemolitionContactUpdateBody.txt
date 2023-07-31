@@ -1,0 +1,5 @@
+Koska sinut on merkitty purettavan rakennuskohteen omistajan yhteyshenkilöksi, sait tämä sähköpostin. 
+
+Alla on linkki uudelleenkäyttökelpoisiin purkutuotteisiin, jotka voit myydä tai jättää omaan käyttöön
+
+<a href="{link}">{link}</a>
