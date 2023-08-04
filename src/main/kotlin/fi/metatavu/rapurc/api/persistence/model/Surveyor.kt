@@ -1,6 +1,5 @@
 package fi.metatavu.rapurc.api.persistence.model
 
-import com.sun.istack.Nullable
 import java.time.LocalDate
 import java.util.*
 import javax.persistence.*
