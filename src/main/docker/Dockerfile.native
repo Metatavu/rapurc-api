@@ -15,9 +15,8 @@
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
-RUN microdnf install tzdata-java
-ENV TZ=UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN microdnf install java-11-openjdk-headless tzdata tzdata-java
+RUN microdnf clean all
 
 WORKDIR /work/
 RUN chown 1001 /work \
