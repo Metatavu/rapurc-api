@@ -15,13 +15,8 @@
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
-#RUN microdnf java-11-openjdk-headless tzdata
 RUN microdnf install tzdata-java
 RUN microdnf clean all
-#ENV JAVA_HOME=/usr/lib/jvm/jre
-#RUN mkdir -p /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/
-#RUN cp -s /usr/lib/jvm/jre/lib/tzdb.dat /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
-#RUN chmod 777 /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
 
 WORKDIR /work/
 RUN chown 1001 /work \
