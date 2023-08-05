@@ -15,12 +15,13 @@
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
-RUN microdnf install java-11-openjdk-headless tzdata tzdata-java
+#RUN microdnf install java-11-openjdk-headless tzdata tzdata-java
+RUN microdnf tzdata-java
 RUN microdnf clean all
-ENV JAVA_HOME=/usr/lib/jvm/jre
-RUN mkdir -p /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/
-RUN cp -s /usr/lib/jvm/jre/lib/tzdb.dat /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
-RUN chmod 777 /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
+#ENV JAVA_HOME=/usr/lib/jvm/jre
+#RUN mkdir -p /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/
+#RUN cp -s /usr/lib/jvm/jre/lib/tzdb.dat /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
+#RUN chmod 777 /usr/lib/jvm/java-11-openjdk-11.0.20.0.8-2.el8.x86_64/lib/tzdb.dat
 
 WORKDIR /work/
 RUN chown 1001 /work \
@@ -31,5 +32,4 @@ COPY --chown=1001:root build/*-runner /work/application
 EXPOSE 8080
 USER 1001
 
-CMD ["tail", "-f", "/etc/hosts"]
-# CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
