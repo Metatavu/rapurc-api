@@ -3,6 +3,8 @@ package fi.metatavu.rapurc.api.impl
 import fi.metatavu.rapurc.api.UserRole
 import fi.metatavu.rapurc.api.impl.buildings.BuildingController
 import fi.metatavu.rapurc.api.impl.buildings.BuildingTypeController
+import fi.metatavu.rapurc.api.impl.email.Templates
+import fi.metatavu.rapurc.api.impl.groups.GroupJoinController
 import fi.metatavu.rapurc.api.impl.materials.HazardousMaterialController
 import fi.metatavu.rapurc.api.impl.materials.ReusableController
 import fi.metatavu.rapurc.api.impl.materials.ReusableMaterialController
@@ -11,9 +13,11 @@ import fi.metatavu.rapurc.api.impl.owners.OwnerInformationController
 import fi.metatavu.rapurc.api.impl.surveyors.SurveyorController
 import fi.metatavu.rapurc.api.impl.surveys.AttachmentController
 import fi.metatavu.rapurc.api.impl.surveys.SurveyController
+import fi.metatavu.rapurc.api.impl.surveys.SurveyEmailController
 import fi.metatavu.rapurc.api.impl.translate.*
 import fi.metatavu.rapurc.api.impl.waste.*
 import fi.metatavu.rapurc.api.model.*
+import fi.metatavu.rapurc.api.persistence.model.JoinRequestType
 import fi.metatavu.rapurc.api.spec.V1Api
 import java.time.LocalDate
 import java.util.*
@@ -125,10 +129,27 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     lateinit var attachmentTranslator: AttachmentTranslator
 
+    @Inject
+    lateinit var userGroupTranslator: UserGroupTranslator
+
+    @Inject
+    lateinit var groupJoinController: GroupJoinController
+
+    @Inject
+    lateinit var groupJoinRequestTranslator: GroupJoinRequestTranslator
+
+    @Inject
+    lateinit var groupJoinInviteTranslator: GroupInviteRequestTranslator
+
+    @Inject
+    lateinit var userTranslator: UserTranslator
+
+    @Inject
+    lateinit var surveyEmailController: SurveyEmailController
 
     /* SURVEYS */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveys(
         firstResult: Int?,
         maxResults: Int?,
@@ -141,10 +162,10 @@ class V1ApiImpl : V1Api, AbstractApi() {
     ): Response? {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
-        var groupId: UUID? = null
-        if (!isAdmin()) {
-            groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
-        }
+        // No group filters if user is admin
+        val groups: List<UUID>? = if (!isAdmin()) {
+            keycloakController.getUserGroups(userId).map { UUID.fromString(it.id) }
+        } else null
 
         val surveys = surveyController.list(
             firstResult = firstResult ?: 0,
@@ -155,35 +176,41 @@ class V1ApiImpl : V1Api, AbstractApi() {
             dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
-            keycloakGroupId = groupId
+            groupIds = groups
         )
 
         return createOk(surveys.map(surveyTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurvey(survey: Survey?): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         survey ?: return createBadRequest(MISSING_REQUEST_BODY)
         val status = survey.status
 
-        val groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
+        // check that user belongs to the group which it wants to assign to the survey
+        val selectedGroupID = survey.groupId
+        val userGroupIds = keycloakController.getUserGroups(userId).map { it.id }
+        if (userGroupIds.isEmpty() || userGroupIds.contains(selectedGroupID.toString()).not()) {
+            return createForbidden("User $userId does not belong to the group $selectedGroupID")
+        }
+
         val surveyCreatorDisplayName = keycloakController.getDisplayName(userId) ?: return createForbidden("User name not found")
         val createdSurvey = surveyController.create(
             status = status,
-            keycloakGroupId = groupId,
             type = survey.type,
             dateUnknown = survey.dateUnknown,
             startDate = survey.startDate,
             endDate = survey.endDate,
             additionalInformation = survey.additionalInformation,
             creatorDisplayName = surveyCreatorDisplayName,
+            groupId = selectedGroupID,
             creatorId = userId
         )
         return createOk(surveyTranslator.translate(createdSurvey))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurvey(surveyId: UUID?): Response {
         val userId = loggedUserId ?: return createForbidden(NO_LOGGED_USER_ID)
         surveyId ?: return createBadRequest(createMissingIdFromRequestMessage(target = SURVEY))
@@ -196,7 +223,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyTranslator.translate(foundSurvey))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurvey(surveyId: UUID?, survey: Survey?): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         survey ?: return createBadRequest(MISSING_REQUEST_BODY)
@@ -220,7 +247,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyTranslator.translate(updatedSurvey))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurvey(surveyId: UUID?): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         surveyId ?: return createBadRequest(createMissingIdFromRequestMessage(target = SURVEY))
@@ -237,7 +264,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /** Surveyors */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveyors(surveyId: UUID): Response {
         loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -246,6 +273,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyors.map(surveyorTranslator::translate))
     }
 
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurveyor(surveyId: UUID, surveyor: Surveyor): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -261,7 +289,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyorTranslator.translate(createdSurveyor))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurveyor(surveyId: UUID, surveyorId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -273,7 +301,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyorTranslator.translate(foundSurveyor))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurveyor(surveyId: UUID, surveyorId: UUID, surveyor: Surveyor): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -291,7 +319,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(surveyorTranslator.translate(updatedSurveyor))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurveyor(surveyId: UUID, surveyorId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -306,7 +334,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* OWNERS */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listOwnerInformation(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -317,7 +345,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(ownerInformationList.map(ownerInformationTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createOwnerInformation(surveyId: UUID, ownerInformation: OwnerInformation): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -340,7 +368,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(ownerInformationTranslator.translate(createdOwnerInformation))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findOwnerInformation(surveyId: UUID, ownerId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -355,7 +383,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(ownerInformationTranslator.translate(foundOwnerInformation))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateOwnerInformation(
         surveyId: UUID,
         ownerId: UUID,
@@ -376,7 +404,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(ownerInformationTranslator.translate(updatedOwnerInformation))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteOwnerInformation(surveyId: UUID, ownerId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -395,7 +423,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Building types */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listBuildingTypes(): Response {
         return createOk(buildingTypeController.list().map(buildingTypeTranslator::translate))
     }
@@ -414,7 +442,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(buildingTypeTranslator.translate(createdBuildingType))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findBuildingType(buildingTypeId: UUID): Response {
         val foundBuildingType = buildingTypeController.find(buildingTypeId) ?: return createNotFound(createNotFoundMessage(target = BUILDING_TYPE, id = buildingTypeId))
 
@@ -451,7 +479,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Buildings */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listBuildings(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -462,7 +490,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(buildings.map(buildingTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createBuilding(surveyId: UUID, building: Building): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -489,7 +517,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(buildingTranslator.translate(createdBuilding))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findBuilding(surveyId: UUID, buildingId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -504,7 +532,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(buildingTranslator.translate(foundBuilding))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateBuilding(surveyId: UUID, buildingId: UUID, payload: Building): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -532,7 +560,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(buildingTranslator.translate(updatedBuilding))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteBuilding(surveyId: UUID, buildingId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -604,7 +632,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* REUSABLES */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveyReusables(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -615,7 +643,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(reusables?.map(reusableTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurveyReusable(surveyId: UUID, reusable: Reusable): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -632,7 +660,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(reusableTranslator.translate(createdReusable))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurveyReusable(surveyId: UUID, reusableId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -648,7 +676,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(reusableTranslator.translate(reusable))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurveyReusable(surveyId: UUID, reusableId: UUID, reusable: Reusable): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -672,7 +700,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(reusableTranslator.translate(updatedReusable))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurveyReusable(surveyId: UUID, reusableId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -691,7 +719,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Waste category */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listWasteCategories(): Response {
         val categories = wasteCategoryController.list()
         return createOk(categories.map(wasteCategoryTranslator::translate))
@@ -710,7 +738,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteCategoryTranslator.translate(createdCategory))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findWasteCategory(wasteCategoryId: UUID): Response {
         val foundWasteCategory = wasteCategoryController.find(wasteCategoryId = wasteCategoryId) ?: return createNotFound(createNotFoundMessage(target = WASTE_CATEGORY, id = wasteCategoryId))
 
@@ -749,7 +777,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Waste material */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listWasteMaterials(): Response {
         val wasteMaterials = wasteMaterialController.list(wasteCategory = null)
         return createOk(wasteMaterials.map(wasteMaterialTranslator::translate))
@@ -766,7 +794,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteMaterialTranslator.translate(createdWasteMaterial))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findWasteMaterial(wasteMaterialId: UUID): Response {
         val foundWasteMaterial = wasteMaterialController.find(wasteMaterialId = wasteMaterialId) ?: return createNotFound(createNotFoundMessage(target = WASTE_MATERIAL, id = wasteMaterialId))
         return createOk(wasteMaterialTranslator.translate(foundWasteMaterial))
@@ -803,7 +831,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Survey waste */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveyWastes(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -814,7 +842,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wastes.map(wasteTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurveyWaste(surveyId: UUID, waste: Waste): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -833,7 +861,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteTranslator.translate(createdWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurveyWaste(surveyId: UUID, wasteId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -849,7 +877,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteTranslator.translate(foundWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurveyWaste(surveyId: UUID, wasteId: UUID, waste: Waste): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -876,7 +904,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteTranslator.translate(updatedWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurveyWaste(surveyId: UUID, wasteId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -895,7 +923,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Usages */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listUsages(): Response {
         return createOk(usageController.list().map(usageTranslator::translate))
     }
@@ -912,7 +940,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(usageTranslator.translate(createdUsage))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findUsage(usageId: UUID): Response {
         val foundUsage = usageController.find(usageId) ?: return createNotFound(createNotFoundMessage(target = USAGE, id = usageId))
 
@@ -947,7 +975,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Hazardous materials */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listHazardousMaterials(): Response {
         val hazardousMaterials = hazardousMaterialController.list(wasteCategory = null)
         return createOk(hazardousMaterials.map(hazardousMaterialTranslator::translate))
@@ -963,7 +991,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(hazardousMaterialTranslator.translate(foundHazardousMaterial))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findHazardousMaterial(hazardousMaterialId: UUID): Response {
         val hazardousMaterial = hazardousMaterialController.find(materialId = hazardousMaterialId) ?: return createNotFound(createNotFoundMessage(target = HAZ_MATERIAL, id = hazardousMaterialId))
         return createOk(hazardousMaterialTranslator.translate(hazardousMaterial))
@@ -1000,7 +1028,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Waste specifiers */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listWasteSpecifiers(): Response {
         val wasteSpecifiers = wasteSpecifierController.list()
 
@@ -1020,7 +1048,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(wasteSpecifierTranslator.translate(createdWasteSpecifier))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findWasteSpecifier(wasteSpecifierId: UUID): Response {
         val foundWasteSpecifier = wasteSpecifierController.find(wasteSpecifierId = wasteSpecifierId) ?: return createNotFound(createNotFoundMessage(target = WASTE_SPECIFIER, id = wasteSpecifierId))
 
@@ -1063,7 +1091,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* Survey hazardous waste */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveyHazardousWastes(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -1078,7 +1106,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(hazardousWasteList.map(hazardousWasteTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurveyHazardousWaste(surveyId: UUID, hazardousWaste: HazardousWaste): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -1100,7 +1128,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(hazardousWasteTranslator.translate(createdHazardousWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurveyHazardousWaste(surveyId: UUID, hazardousWasteId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -1115,7 +1143,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(hazardousWasteTranslator.translate(foundHazardousWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurveyHazardousWaste(
         surveyId: UUID,
         hazardousWasteId: UUID,
@@ -1145,7 +1173,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(hazardousWasteTranslator.translate(updatedHazardousWaste))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurveyHazardousWaste(surveyId: UUID, hazardousWasteId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
 
@@ -1163,7 +1191,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     /* ATTACHMENTS */
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun listSurveyAttachments(surveyId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -1174,7 +1202,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(attachments.map(attachmentTranslator::translate))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun createSurveyAttachment(surveyId: UUID, attachment: Attachment): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -1190,7 +1218,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(attachmentTranslator.translate(createdAttachment))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun findSurveyAttachment(surveyId: UUID, attachmentId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -1206,7 +1234,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(attachmentTranslator.translate(attachment))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun updateSurveyAttachment(
         surveyId: UUID,
         attachmentId: UUID,
@@ -1232,7 +1260,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createOk(attachmentTranslator.translate(updatedAttachment))
     }
 
-    @RolesAllowed(value = [ UserRole.USER.name ])
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
     override fun deleteSurveyAttachment(surveyId: UUID, attachmentId: UUID): Response {
         val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
         val survey = surveyController.find(surveyId = surveyId) ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
@@ -1249,6 +1277,378 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return createNoContent()
     }
 
+    /* USER GROUPS */
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listUserGroups(admin: Boolean?, member: Boolean?): Response? {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val currentUser = keycloakController.findUserById(userId) ?: return createNotFound("No $USER found")
+
+        val groups = if (admin == true) {
+            keycloakController.listGroupsForAdmin(UUID.fromString(currentUser.id))
+        } else if (member == true) {
+            keycloakController.getUserGroups(UUID.fromString(currentUser.id))
+        } else {
+            keycloakController.listGroups()
+        }
+        return createOk(groups.map(userGroupTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun createUserGroup(userGroup: UserGroup): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        if (keycloakController.findGroupByName(userGroup.name) != null) {
+            return createBadRequest("Group with name ${userGroup.name} already exists")
+        }
+
+        val createdGroup = keycloakController.createGroup(userGroup.name) ?: return createInternalServerError("Could not create group")
+        keycloakController.assignAsGroupAdmin(
+            groupId = createdGroup.id,
+            userId = userId
+        )
+
+        return createOk(userGroupTranslator.translate(createdGroup))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun findUserGroup(groupId: UUID): Response {
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        return createOk(userGroupTranslator.translate(group))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun updateUserGroup(groupId: UUID, userGroup: UserGroup): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val existingGroup = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (userGroup.id == null || existingGroup.id != userGroup.id.toString()) {
+            return createBadRequest("Group id ${userGroup.id} does not match path parameter $groupId")
+        }
+
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val groupWithSameName = keycloakController.findGroupByName(userGroup.name)
+        if (groupWithSameName != null && groupWithSameName.id != groupId.toString()) {
+            return createBadRequest("Another group with name ${userGroup.name} already exists")
+        }
+
+        keycloakController.updateGroup(groupId, userGroup.name)
+        val updatedGroup = keycloakController.findGroupById(userGroup.id) ?: return createInternalServerError("Could not update group")
+        return createOk(userGroupTranslator.translate(updatedGroup))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteUserGroup(groupId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        groupJoinController.listGroupJoins(groupId = groupId).forEach {
+            groupJoinController.deleteGroupJoin(it)
+        }
+        keycloakController.deleteGroup(groupId)
+        keycloakController.unassignAsGroupAdmin(
+            groupId = groupId.toString(),
+            userId = userId
+        )
+
+        return createNoContent()
+    }
+
+    /* GROUP MEMBERS */
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupMembers(groupId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        val groupMembers = keycloakController.listGroupMembers(groupId)
+        return createOk(groupMembers.map(userTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteGroupUser(groupId: UUID, userId: UUID): Response {
+        val loggedInUser = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(loggedInUser, groupId)?.let { return it }
+
+        keycloakController.findUserById(userId) ?: return createNotFound(createNotFoundMessage(target = USER, id = userId))
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (groupAdmin.id == userId.toString()) {
+            return createBadRequest("Cannot remove group admin from group")
+        }
+
+        keycloakController.removeUserFromGroup(userId, groupId)
+        return createNoContent()
+    }
+
+    /* GROUP REQUESTS */
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupJoinRequests(groupId: UUID, status: JoinRequestStatus?): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val groupJoinRequests = groupJoinController.listGroupJoins(type = JoinRequestType.REQUEST, groupId = groupId, status = status)
+        return createOk(groupJoinRequests.map(groupJoinRequestTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun createGroupJoinRequest(groupId: UUID, groupJoinRequest: GroupJoinRequest): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        if (groupId != groupJoinRequest.groupId) {
+            return createBadRequest("Group id ${groupJoinRequest.groupId} does not match path parameter $groupId")
+        }
+
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
+
+        val userToJoin = keycloakController.findUserByEmail(groupJoinRequest.email) ?: return createNotFound("No $USER found with email ${groupJoinRequest.email}")
+        if (userToJoin.id != userId.toString()) {
+            return createForbidden("User $userId is not allowed to create join request for user ${groupJoinRequest.email}")
+        }
+
+        val createdRequest = groupJoinController.createGroupJoinRequest(
+            joiningUser = userToJoin,
+            groupId = groupId,
+            groupName = group.name,
+            groupAdmin = groupAdmin,
+            userId = userId
+        )
+
+        return createOk(groupJoinRequestTranslator.translate(createdRequest))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun findGroupJoinRequest(groupId: UUID, requestId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val groupJoinRequest = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.REQUEST,
+            requestId = requestId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_REQUEST, id = requestId))
+        if (groupJoinRequest.groupId != groupId) {
+            return createNotFound(createNotFoundMessage(target = GROUP_JOIN_REQUEST, id = requestId))
+        }
+        return createOk(groupJoinRequestTranslator.translate(groupJoinRequest))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun updateGroupJoinRequest(groupId: UUID, requestId: UUID, groupJoinRequest: GroupJoinRequest): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+        if (groupId != groupJoinRequest.groupId) {
+            return createBadRequest("Group id ${groupJoinRequest.groupId} does not match path parameter $groupId")
+        }
+
+        val existingRequest = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.REQUEST,
+            requestId = requestId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_REQUEST, id = requestId))
+        if (existingRequest.groupId != groupId) {
+            return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = requestId))
+        }
+
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
+        val joiningUser = keycloakController.findUserByEmail(groupJoinRequest.email) ?: return createNotFound("No $USER found with email ${groupJoinRequest.email}")
+
+        val updatedRequest = groupJoinController.updateGroupJoinRequest(
+            request = existingRequest,
+            targetGroup = group,
+            targetGroupAdmin = groupAdmin,
+            newStatus = groupJoinRequest.status,
+            joiningUser = joiningUser,
+            modifierId = userId
+        )
+
+        return createOk(groupJoinRequestTranslator.translate(updatedRequest))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteGroupJoinRequest(groupId: UUID, requestId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val existingRequest = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.REQUEST,
+            requestId = requestId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_REQUEST, id = requestId))
+        groupJoinController.deleteGroupJoin(request = existingRequest)
+
+        return createNoContent()
+    }
+
+    /* GROUP INVITATIONS */
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listUserGroupJoinInvites(): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val user = keycloakController.findUserById(userId) ?: return createUnauthorized(NO_LOGGED_USER_ID)
+
+        val groupJoinInvites = groupJoinController.listGroupJoins(
+            email = user.email,
+            type = JoinRequestType.INVITE
+        )
+        
+        return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun listGroupJoinInvites(groupId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val groupJoinInvites = groupJoinController.listGroupJoins(
+            groupId = groupId,
+            type = JoinRequestType.INVITE
+        )
+        return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun createGroupJoinInvite(groupId: UUID, groupJoinInvite: GroupJoinInvite): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+        if (groupId != groupJoinInvite.groupId) {
+            return createBadRequest("Group id ${groupJoinInvite.groupId} does not match path parameter $groupId")
+        }
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
+
+        val createdInvite = groupJoinController.createGroupInvite(
+            joiningUserEmail = groupJoinInvite.email,
+            groupId = groupId,
+            groupName = group.name,
+            groupAdmin = groupAdmin,
+            userId = userId
+        )
+
+        return createOk(groupJoinInviteTranslator.translate(createdInvite))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun findGroupJoinInvite(groupId: UUID, inviteId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val currentUserEmail =  keycloakController.findUserById(userId) ?: return createUnauthorized(NO_LOGGED_USER_ID)
+
+        val groupJoinRequest = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.INVITE,
+            requestId = inviteId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+
+        // if it's not the invited user viewing the invite, check if it's group's admin
+        if (groupJoinRequest.email != currentUserEmail.email) {
+            groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+        }
+
+        return createOk(groupJoinRequestTranslator.translate(groupJoinRequest))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun sendGroupJoinInviteEmail(groupId: UUID, inviteId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val existingInvite = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.INVITE,
+            requestId = inviteId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+
+        if (existingInvite.groupId != groupId) {
+            return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+        }
+
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
+
+        groupJoinController.informUser(
+            userEmail = existingInvite.email,
+            admin = groupAdmin,
+            subject = Templates.userInviteEmailSubject(group.name).render(),
+            body = Templates.userInviteEmail(group.name).render(),
+        )
+
+        return createAccepted(null)
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun updateGroupJoinInvite(groupId: UUID, inviteId: UUID, groupJoinInvite: GroupJoinInvite): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        val currentUser =  keycloakController.findUserById(userId) ?: return createUnauthorized(NO_LOGGED_USER_ID)
+
+        val existingInvite = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.INVITE,
+            requestId = inviteId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+        if (existingInvite.groupId != groupId) {
+            return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+        }
+
+        if (existingInvite.email != currentUser.email) {
+            return createForbidden("Only the invited user can update the invite")
+        }
+
+        val group = keycloakController.findGroupById(groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        val groupAdmin = keycloakController.findGroupAdmin(group) ?: return createNotFound(createNotFoundMessage(target = GROUP_ADMIN, id = groupId))
+
+        val updatedInvite = groupJoinController.updateGroupJoinRequest(
+            request = existingInvite,
+            targetGroup = group,
+            targetGroupAdmin = groupAdmin,
+            newStatus = groupJoinInvite.status,
+            joiningUser = currentUser,
+            modifierId = userId
+        )
+
+        return createOk(groupJoinRequestTranslator.translate(updatedInvite))
+    }
+
+    @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
+    override fun deleteGroupJoinInvite(groupId: UUID, inviteId: UUID): Response {
+        val userId = loggedUserId ?: return createUnauthorized(NO_LOGGED_USER_ID)
+        groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
+
+        val existingRequest = groupJoinController.findGroupJoin(
+            groupId = groupId,
+            type = JoinRequestType.INVITE,
+            requestId = inviteId
+        ) ?: return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+        if (existingRequest.groupId != groupId) {
+            return createNotFound(createNotFoundMessage(target = GROUP_JOIN_INVITE, id = inviteId))
+        }
+        groupJoinController.deleteGroupJoin(request = existingRequest)
+
+        return createNoContent()
+    }
+
+    @RolesAllowed(value = [UserRole.USER.name, UserRole.ADMIN.name])
+    override fun sendSurveyEmail(surveyId: UUID, emailTemplate: EmailTemplate): Response {
+        val userId = loggedUserId ?: return createForbidden(NO_LOGGED_USER_ID)
+
+        val foundSurvey = surveyController.find(surveyId = surveyId)
+            ?: return createNotFound(createNotFoundMessage(target = SURVEY, id = surveyId))
+
+        surveyAccessRightsCheck(userId, foundSurvey)?.let { return it }
+        val problems = surveyEmailController.sendSurveyEmail(
+            survey = foundSurvey,
+            emailAddress = emailTemplate.emailAddress,
+            emailType = emailTemplate.emailType,
+            emailData = emailTemplate.emailData,
+            userId = userId
+        )
+        if (!problems.isNullOrEmpty()) {
+            return createBadRequest(problems)
+        }
+
+        return createAccepted(null)
+    }
+
     override fun ping(): Response {
         return createOk("pong")
     }
@@ -1262,8 +1662,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
      */
     private fun surveyAccessRightsCheck(userId: UUID, survey: fi.metatavu.rapurc.api.persistence.model.Survey): Response? {
         if (!isAdmin()) {
-            val groupId = keycloakController.getGroupId(userId) ?: return createForbidden(createMissingGroupIdMessage(userId = userId))
-            if (groupId != survey.keycloakGroupId) {
+            val userGroupIds = keycloakController.getUserGroups(userId)
+            val allowedGroupId = survey.keycloakGroupId
+            if (userGroupIds.find { it.id == allowedGroupId.toString() } == null) {
                 return createForbidden(createWrongGroupMessage(userId = userId))
             }
         }
@@ -1285,16 +1686,33 @@ class V1ApiImpl : V1Api, AbstractApi() {
         return null
     }
 
-    companion object {
+    /**
+     * Checks if user has admin rights for the group
+     *
+     * @param userId user id
+     * @param groupId group id
+     * @return true if user has admin rights for the group
+     */
+    private fun isGroupAdmin(userId: UUID, groupId: UUID): Boolean {
+        return keycloakController.getGroupsAttributes(userId).contains(groupId.toString())
+    }
 
-        /**
-         * Creates missing group id from user message
-         *
-         * @param userId user id
-         */
-        protected fun createMissingGroupIdMessage(userId: UUID): String {
-            return "User $userId belongs to no group"
+    /**
+     * Returns error if user cannot manage the group
+     *
+     * @param userId user id
+     * @param groupId group id
+     * @return null or response if user has no rights
+     */
+    private fun groupAdminAccessRightsCheckFail(userId: UUID, groupId: UUID): Response? {
+        keycloakController.findGroupById(groupId = groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
+        if (!isGroupAdmin(groupId = groupId, userId = userId)) {
+            return createForbidden("User $userId is not allowed to manage group $groupId")
         }
+        return null
+    }
+
+    companion object {
 
         /**
          * Creates wrong group id message
@@ -1345,6 +1763,11 @@ class V1ApiImpl : V1Api, AbstractApi() {
         const val BUILDING_TYPE = "Building type"
         const val ATTACHMENT = "Attachment"
         const val MISSING_NAME = "Missing name"
+        const val USER_GROUP = "User group"
+        const val USER = "User"
+        const val GROUP_JOIN_REQUEST = "Group join request"
+        const val GROUP_JOIN_INVITE = "Group join invite"
+        const val GROUP_ADMIN = "Group admin"
     }
 
 }

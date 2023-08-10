@@ -13,4 +13,14 @@ class ApiTestSettings {
     val apiBasePath: String
         get() = "http://localhost:8081"
 
+
+    companion object {
+        // Mailgun settings
+
+        const val mailgunDomain = "example.com"
+        const val mailgunApiKey = "apiKey"
+        const val mailgunApiUrlEnding = "mgapi"
+        const val mailgunSenderEmail = "noreply@example.com"
+    }
+
 }

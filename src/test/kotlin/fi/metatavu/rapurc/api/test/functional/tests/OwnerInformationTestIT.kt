@@ -41,8 +41,8 @@ class OwnerInformationTestIT {
     @Test
     fun create() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyA2 = it.userA.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyA2 = it.userA.surveys.create(it.userA)
 
             it.userB.owners.assertCreateFailStatus(403, createdSurveyA1.id, ownerInformation)
             it.userA.owners.assertCreateFailStatus(
@@ -72,9 +72,9 @@ class OwnerInformationTestIT {
     @Test
     fun list() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyA2 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyA2 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             it.userA.owners.create(
                 createdSurveyA1.id!!, ownerInformation.copy(
                     surveyId = createdSurveyA1.id
@@ -108,8 +108,8 @@ class OwnerInformationTestIT {
     @Test
     fun find() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             val ownerInformation1 = it.userA.owners.create(
                 createdSurveyA1.id!!, ownerInformation.copy(
                     surveyId = createdSurveyA1.id
@@ -141,8 +141,8 @@ class OwnerInformationTestIT {
     @Test
     fun update() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             val ownerInformation1 = it.userA.owners.create(
                 createdSurveyA1.id!!, ownerInformation.copy(
                     surveyId = createdSurveyA1.id
@@ -181,8 +181,8 @@ class OwnerInformationTestIT {
     @Test
     fun delete() {
         TestBuilder().use {
-            val createdSurveyA1 = it.userA.surveys.create()
-            val createdSurveyB1 = it.userB.surveys.create()
+            val createdSurveyA1 = it.userA.surveys.create(it.userA)
+            val createdSurveyB1 = it.userB.surveys.create(it.userB)
             val ownerInformation1 = it.userA.owners.create(
                 createdSurveyA1.id!!, ownerInformation.copy(
                     surveyId = createdSurveyA1.id

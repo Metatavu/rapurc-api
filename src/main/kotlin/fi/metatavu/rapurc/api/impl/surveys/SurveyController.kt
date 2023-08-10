@@ -59,7 +59,7 @@ class SurveyController {
      * @param dateUnknown demolition date unknown
      * @param startDate start date
      * @param endDate end date
-     * @param keycloakGroupId filter by group id
+     * @param groupIds filter by group ids
      * @return List of visitor variables
      */
     fun list(
@@ -71,8 +71,8 @@ class SurveyController {
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        keycloakGroupId: UUID?
-        ): List<Survey> {
+        groupIds: List<UUID>?
+    ): List<Survey> {
         return surveyDAO.list(
             firstResult = firstResult,
             maxResults = maxResults,
@@ -82,7 +82,7 @@ class SurveyController {
             dateUnknown = dateUnknown,
             startDate = startDate,
             endDate = endDate,
-            keycloakGroupId = keycloakGroupId
+            groupIds = groupIds
         )
     }
 
@@ -90,31 +90,32 @@ class SurveyController {
      * Creates new survey
      *
      * @param status new status
-     * @param keycloakGroupId keycloak group id
      * @param type survey type
+     * @param groupIds group ids that will have access to the survey
      * @param startDate estimated demolition start
      * @param dateUnknown date of demolition is unknown
      * @param endDate estimated demolition end
      * @param additionalInformation additional information
      * @param creatorDisplayName creator's name
+     * @param groupId group ID
      * @param creatorId creator's ID
      * @return created survey
      */
     fun create(
         status: SurveyStatus,
-        keycloakGroupId: UUID,
         type: SurveyType,
         dateUnknown: Boolean?,
         startDate: LocalDate?,
         endDate: LocalDate?,
         additionalInformation: String?,
         creatorDisplayName: String,
+        groupId: UUID,
         creatorId: UUID
     ): Survey {
         return surveyDAO.create(
             id = UUID.randomUUID(),
             status = status,
-            keycloakGroupId = keycloakGroupId,
+            groupId = groupId,
             type = type,
             dateUnknown = dateUnknown,
             startDate = startDate,
