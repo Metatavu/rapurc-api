@@ -1493,7 +1493,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             type = JoinRequestType.INVITE
         )
         
-        return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
+        return createOk(groupJoinInvites.map(groupJoinInviteTranslator::translate))
     }
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
@@ -1505,7 +1505,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             groupId = groupId,
             type = JoinRequestType.INVITE
         )
-        return createOk(groupJoinInvites.map(groupJoinRequestTranslator::translate))
+        return createOk(groupJoinInvites.map(groupJoinInviteTranslator::translate))
     }
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
@@ -1545,7 +1545,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             groupAdminAccessRightsCheckFail(userId, groupId)?.let { return it }
         }
 
-        return createOk(groupJoinRequestTranslator.translate(groupJoinRequest))
+        return createOk(groupJoinInviteTranslator.translate(groupJoinRequest))
     }
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
@@ -1605,7 +1605,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
             modifierId = userId
         )
 
-        return createOk(groupJoinRequestTranslator.translate(updatedInvite))
+        return createOk(groupJoinInviteTranslator.translate(updatedInvite))
     }
 
     @RolesAllowed(value = [ UserRole.USER.name, UserRole.ADMIN.name ])
