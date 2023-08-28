@@ -26,6 +26,10 @@ class GroupJoinRequest : Metadata() {
     @Column(nullable = false)
     @Enumerated(javax.persistence.EnumType.STRING)
     lateinit var requestType: JoinRequestType
+
+    // Optional field for invite requests
+    @Column
+    var invitingUserName: String? = null
 }
 
 /**
