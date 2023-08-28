@@ -76,6 +76,7 @@ class GroupJoinController {
                 groupId = groupId,
                 status = JoinRequestStatus.PENDING,
                 type = JoinRequestType.REQUEST,
+                invitingUserFullName = null,
                 creatorId = userId,
                 lastModifierId = userId
             )
@@ -100,16 +101,18 @@ class GroupJoinController {
     ): GroupJoinRequest {
             informUser(
                 userEmail = joiningUserEmail,
-                admin = groupAdmin,
                 subject = Templates.userInviteEmailSubject(groupName).render(),
                 body =  Templates.userInviteEmail(groupName).render()
             )
+            val invitingUser = keycloakController.findUserById(userId)
+            val invitingUserFullName = if (invitingUser != null) getFullName(invitingUser) else null
             return groupJoinRequestDAO.create(
                 id = UUID.randomUUID(),
                 email = joiningUserEmail,
                 groupId = groupId,
                 status = JoinRequestStatus.PENDING,
                 type = JoinRequestType.INVITE,
+                invitingUserFullName = invitingUserFullName,
                 creatorId = userId,
                 lastModifierId = userId
             )
@@ -174,13 +177,11 @@ class GroupJoinController {
                     JoinRequestStatus.ACCEPTED -> informUser(
                         userEmail = joiningUser.email,
                         body = Templates.joinRequestAcceptedEmail(groupName).render(),
-                        admin = targetGroupAdmin,
                         subject = Templates.joinRequestAcceptedEmailSubject(groupName).render()
                     )
                     JoinRequestStatus.REJECTED -> informUser(
                         userEmail = joiningUser.email,
                         body = Templates.joinRequestRejectedEmail(groupName).render(),
-                        admin = targetGroupAdmin,
                         subject = Templates.joinRequestRejectedEmailSubject(groupName).render()
                     )
                     else -> {}
@@ -222,11 +223,10 @@ class GroupJoinController {
      * Sends email to user
      *
      * @param userEmail joining user to get email
-     * @param admin admin sending the email
      * @param subject emails subkect
      * @param body email body
      */
-    fun informUser(userEmail: String, admin: UserRepresentation, subject: String, body: String) {
+    fun informUser(userEmail: String, subject: String, body: String) {
         emailController.sendEmail(
             to = userEmail,
             subject = subject,

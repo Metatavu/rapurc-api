@@ -55,6 +55,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(group1.id, createdInvite.groupId)
             assertEquals("userb@example.com", createdInvite.email)
             assertEquals(JoinRequestStatus.pENDING, createdInvite.status)
+            assertEquals("first name last name", createdInvite.invitingUserName)
             assertNotNull(createdInvite.metadata?.creatorId)
             assertNotNull(createdInvite.metadata?.createdAt)
 
@@ -157,6 +158,9 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
 
             assertEquals(1, testBuilder.userB.groupJoinInvites.listUserInvites().size)
             assertEquals(1, testBuilder.userC.groupJoinInvites.listUserInvites().size)
+
+            // Check that admin role can also see the invites
+            assertEquals(2, testBuilder.admin.groupJoinInvites.list(group1.id).size)
         }
     }
 

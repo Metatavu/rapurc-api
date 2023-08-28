@@ -1568,7 +1568,6 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         groupJoinController.informUser(
             userEmail = existingInvite.email,
-            admin = groupAdmin,
             subject = Templates.userInviteEmailSubject(group.name).render(),
             body = Templates.userInviteEmail(group.name).render(),
         )
@@ -1705,6 +1704,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
      * @return null or response if user has no rights
      */
     private fun groupAdminAccessRightsCheckFail(userId: UUID, groupId: UUID): Response? {
+        if (isAdmin()) {
+            return null
+        }
         keycloakController.findGroupById(groupId = groupId) ?: return createNotFound(createNotFoundMessage(target = USER_GROUP, id = groupId))
         if (!isGroupAdmin(groupId = groupId, userId = userId)) {
             return createForbidden("User $userId is not allowed to manage group $groupId")

@@ -730,4 +730,10 @@
       </column>
     </addColumn>
   </changeSet>
+
+  <changeSet id="inviting_user_data" author="katja danilova">
+    <addColumn tableName="groupjoinrequest">
+      <column name="invitingusername" type="varchar(191)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
