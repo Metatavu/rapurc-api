@@ -116,7 +116,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(createdInvite.email, foundByGroupAdmin.email)
             assertEquals(createdInvite.status, foundByGroupAdmin.status)
             assertEquals(createdInvite.metadata?.creatorId, foundByGroupAdmin.metadata?.creatorId)
-            assertEquals(OffsetDateTime.parse(createdInvite.metadata!!.createdAt), OffsetDateTime.parse(foundByGroupAdmin.metadata?.createdAt))
+            assertEquals(OffsetDateTime.parse(createdInvite.metadata!!.createdAt).toEpochSecond(), OffsetDateTime.parse(foundByGroupAdmin.metadata?.createdAt).toEpochSecond())
 
             // No user of another group can see the invite
             testBuilder.userB.groupJoinInvites.assertFindFailStatus(group2.id!!, createdInvite.id, 404)
