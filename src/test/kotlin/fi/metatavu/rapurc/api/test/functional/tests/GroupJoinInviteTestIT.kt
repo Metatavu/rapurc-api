@@ -115,6 +115,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(createdInvite.groupId, foundByGroupAdmin.groupId)
             assertEquals(createdInvite.email, foundByGroupAdmin.email)
             assertEquals(createdInvite.status, foundByGroupAdmin.status)
+            assertEquals(createdInvite.invitingUserName, foundByGroupAdmin.invitingUserName)
             assertEquals(createdInvite.metadata?.creatorId, foundByGroupAdmin.metadata?.creatorId)
             assertEquals(OffsetDateTime.parse(createdInvite.metadata!!.createdAt).toEpochSecond(), OffsetDateTime.parse(foundByGroupAdmin.metadata?.createdAt).toEpochSecond())
 
