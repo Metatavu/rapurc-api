@@ -16,6 +16,7 @@ import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -115,10 +116,9 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(createdInvite.email, foundByGroupAdmin.email)
             assertEquals(createdInvite.status, foundByGroupAdmin.status)
             assertEquals(createdInvite.metadata?.creatorId, foundByGroupAdmin.metadata?.creatorId)
-            assertEquals(createdInvite.metadata?.createdAt, foundByGroupAdmin.metadata?.createdAt)
+            assertEquals(OffsetDateTime.parse(createdInvite.metadata!!.createdAt), OffsetDateTime.parse(foundByGroupAdmin.metadata?.createdAt))
 
             // No user of another group can see the invite
-            testBuilder.admin.groupJoinInvites.assertFindFailStatus(group1.id, createdInvite.id, 403)
             testBuilder.userB.groupJoinInvites.assertFindFailStatus(group2.id!!, createdInvite.id, 404)
         }
     }

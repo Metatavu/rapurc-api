@@ -130,7 +130,7 @@ class GroupJoinRequestTestIT: AbstractTestIT() {
                 Assertions.assertEquals(0, acceptedGroup2Requests.size)
 
                 // check that admin role can also see invites
-                Assertions.assertEquals(1, testBuilder.admin.groupJoinRequests.list(group2.id, null))
+                Assertions.assertEquals(1, testBuilder.admin.groupJoinRequests.list(group2.id, null).size)
 
                 testBuilder.userA.groupJoinRequests.assertListFailStatus(group2.id, 403)
                 testBuilder.userA.groupJoinRequests.assertListFailStatus(UUID.randomUUID(), 404)
