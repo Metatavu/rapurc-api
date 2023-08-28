@@ -14,7 +14,10 @@
 # docker run -i --rm -p 8080:8080 quarkus/rapurc-api
 #
 ###
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
+RUN microdnf install tzdata-java
+RUN microdnf clean all
+
 WORKDIR /work/
 RUN chown 1001 /work \
     && chmod "g+rwX" /work \
