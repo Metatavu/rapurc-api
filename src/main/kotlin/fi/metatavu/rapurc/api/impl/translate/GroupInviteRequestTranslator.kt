@@ -19,6 +19,7 @@ class GroupInviteRequestTranslator : AbstractTranslator<GroupJoinRequest, fi.met
         result.email = entity.email
         result.groupId = entity.groupId
         result.status = entity.status
+        result.invitingUserName = entity.invitingUserName
         result.metadata = metadataTranslator.translate(entity)
         return result
     }

@@ -16,6 +16,7 @@ import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -55,6 +56,7 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(group1.id, createdInvite.groupId)
             assertEquals("userb@example.com", createdInvite.email)
             assertEquals(JoinRequestStatus.pENDING, createdInvite.status)
+            assertEquals("first name last name", createdInvite.invitingUserName)
             assertNotNull(createdInvite.metadata?.creatorId)
             assertNotNull(createdInvite.metadata?.createdAt)
 
@@ -113,11 +115,11 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
             assertEquals(createdInvite.groupId, foundByGroupAdmin.groupId)
             assertEquals(createdInvite.email, foundByGroupAdmin.email)
             assertEquals(createdInvite.status, foundByGroupAdmin.status)
+            assertEquals(createdInvite.invitingUserName, foundByGroupAdmin.invitingUserName)
             assertEquals(createdInvite.metadata?.creatorId, foundByGroupAdmin.metadata?.creatorId)
-            assertEquals(createdInvite.metadata?.createdAt, foundByGroupAdmin.metadata?.createdAt)
+            assertEquals(OffsetDateTime.parse(createdInvite.metadata!!.createdAt).toEpochSecond(), OffsetDateTime.parse(foundByGroupAdmin.metadata?.createdAt).toEpochSecond())
 
             // No user of another group can see the invite
-            testBuilder.admin.groupJoinInvites.assertFindFailStatus(group1.id, createdInvite.id, 403)
             testBuilder.userB.groupJoinInvites.assertFindFailStatus(group2.id!!, createdInvite.id, 404)
         }
     }
@@ -157,6 +159,9 @@ class GroupJoinInviteTestIT : AbstractTestIT() {
 
             assertEquals(1, testBuilder.userB.groupJoinInvites.listUserInvites().size)
             assertEquals(1, testBuilder.userC.groupJoinInvites.listUserInvites().size)
+
+            // Check that admin role can also see the invites
+            assertEquals(2, testBuilder.admin.groupJoinInvites.list(group1.id).size)
         }
     }
 

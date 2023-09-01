@@ -25,6 +25,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
      * @param groupId group id
      * @param status status
      * @param type type of the join request
+     * @param invitingUserFullName full name of user creating invite if applicable
      * @param creatorId creator id
      * @param lastModifierId last modifier id
      */
@@ -34,6 +35,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         groupId: UUID,
         status: JoinRequestStatus,
         type: JoinRequestType,
+        invitingUserFullName: String?,
         creatorId: UUID,
         lastModifierId: UUID
     ): GroupJoinRequest {
@@ -43,6 +45,7 @@ class GroupJoinRequestDAO : AbstractDAO<GroupJoinRequest>() {
         groupJoinRequest.groupId = groupId
         groupJoinRequest.status = status
         groupJoinRequest.requestType = type
+        groupJoinRequest.invitingUserName = invitingUserFullName
         groupJoinRequest.creatorId = creatorId
         groupJoinRequest.lastModifierId = lastModifierId
         return persist(groupJoinRequest)
